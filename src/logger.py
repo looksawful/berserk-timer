@@ -1,0 +1,49 @@
+import winsound
+import logging
+from datetime import datetime
+import os
+import glob
+
+LOG_DIR = "logs"
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+logging.basicConfig(
+    filename=os.path.join(LOG_DIR, "berserk.log"),
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+
+def log_event(message):
+    logging.info(message)
+
+
+def log_witness_response(response):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
+    with open(filename, "a", encoding="utf-8") as f:
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        f.write(f"[{timestamp}] {response}\n")
+
+
+def view_today_log():
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            return f.read()
+    else:
+        return "No log for today."
+
+
+def delete_all_logs():
+    files = [os.path.join(LOG_DIR, "berserk.log")] + \
+        glob.glob(os.path.join(LOG_DIR, "witness_log_*.txt"))
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
+
+
+def play_sound():
+    winsound.Beep(1000, 500)
