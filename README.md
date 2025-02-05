@@ -17,18 +17,16 @@
 # Berserk Timer 0.1
 
 Berserk Timer – a CLI timer with witness mode, and flexible duration input.
-The goal is to create a simple Windows CLI timer that will ask you what were you done for the last N minutes.
-
-I couldn't find any tool that suits my needs: flexibility, simplicity, and functionality in one. That's why I decided to create Berserk Timer. It helps me managing my time a lot so I decided to share it.
+The goal was to create a simple Windows CLI timer that asks you what were you doing for the last N-minutes. I couldn't find any free tool that suits my needs: flexibility, simplicity and no-adds in one. That's why I decided to create Berserk Timer. It helps me managing my time a lot so I decided to share it.
 
 The tool provides:
 
 - **CLI support**.
-- **Customizable timers** with presets, and witness mode.
+- **Customizable timers** with presets, and _witness_ mode.
 - **Easy logging** for your activities.
 - **Quick access** via the `brsk` command, which can be used from any directory.
 
-I hope this tool will make it easier for others to track time and stay productive. Enjoy Berserk Timer and feel free to contribute!
+I hope this tool will make it easier for others to track time and stay productive. Enjoy Berserk Timer and feel free to contribute! 
 
 ## Features
 
