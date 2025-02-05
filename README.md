@@ -56,4 +56,9 @@ From the root directory, run:
 
   or just run `brsk` command, which can be used from any directory.
 
-  
+  *TODO LIST
+
+    [] add installer for windows
+    [] make it non-windows
+    [] 
+    [] etc...
