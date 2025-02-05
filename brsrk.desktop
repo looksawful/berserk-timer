@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Berserk Timer
+Comment=Run Berserk Timer
+Exec=run.sh %F
+Icon=icon.png
+Terminal=true
+Categories=Uchmod +x run.command
+tility;
