@@ -12,7 +12,6 @@
       ▀       ▐    █  ▀███▀     █                 
                   ▀            ▀
 
-
 # Berserk Timer
 
 Berserk Timer – a CLI timer with witness mode, and flexible duration input.
