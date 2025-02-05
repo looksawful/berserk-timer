@@ -1,4 +1,4 @@
-# The GUI is totaly experimental mode, you SHOULD NOT expect it to work fine.
+# The GUI is totaly experimental, you SHOULD NOT expect it to work fine.
 # Yet NO witness-mode for gui, sorry.
 
 import tkinter as tk
@@ -75,7 +75,6 @@ def run_gui_timer(timer, witness_mode, custom_phrase, config):
 
     button_frame = tk.Frame(root)
     button_frame.grid(pady=10)
-
     tk.Button(button_frame, text="Pause", command=pause).grid(
         row=0, column=0, padx=5)
     tk.Button(button_frame, text="Resume", command=resume).grid(
@@ -92,13 +91,19 @@ def run_gui_timer(timer, witness_mode, custom_phrase, config):
         row=1, column=4, padx=5, pady=5)
 
     def update_label():
-        if timer.get_remaining_time() <= 0:
-            time_label.config(text="Time's up!")
-            root.after(1000, root.destroy)
-        else:
-            time_label.config(
-                text=f"Time remaining: {timer.get_remaining_time_str()}")
-            root.after(1000, update_label)
+        try:
+            if timer.get_remaining_time() <= 0:
+                time_label.config(text="Time's up!")
+                # Schedule destruction of the window after a short delay.
+                root.after(1000, root.destroy)
+            else:
+                time_label.config(
+                    text=f"Time remaining: {timer.get_remaining_time_str()}")
+                # Reschedule the update_label callback.
+                root.after(1000, update_label)
+        except tk.TclError:
+            # This exception is raised if the widget has been destroyed.
+            pass
 
     update_label()
     root.mainloop()
