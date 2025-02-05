@@ -18,7 +18,9 @@ logging.basicConfig(
 def log_event(message):
     logging.info(message)
 
-#TODO use log or json instead of txt?
+# TODO use log or json instead of txt?
+
+
 def log_witness_response(response):
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
@@ -26,7 +28,9 @@ def log_witness_response(response):
         timestamp = datetime.now().strftime("%H:%M:%S")
         f.write(f"[{timestamp}] {response}\n")
 
-#TODO possibility to wake the logs without running the timer
+# TODO possibility to wake the logs without running the timer
+
+
 def view_today_log():
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
@@ -38,11 +42,16 @@ def view_today_log():
 
 
 def delete_all_logs():
+    logging.shutdown()
+
     files = [os.path.join(LOG_DIR, "berserk.log")] + \
         glob.glob(os.path.join(LOG_DIR, "witness_log_*.txt"))
     for file in files:
         if os.path.exists(file):
-            os.remove(file)
+            try:
+                os.remove(file)
+            except Exception as e:
+                print(f"Error deleting file {file}: {e}")
 
 
 def play_sound():
