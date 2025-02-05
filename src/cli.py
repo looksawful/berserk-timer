@@ -1,6 +1,6 @@
 import threading
 import time
-import msvcrt
+import msvcrt #TODO get rid of that
 from .logger import view_today_log, delete_all_logs
 
 
