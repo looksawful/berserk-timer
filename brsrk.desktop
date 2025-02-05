@@ -3,7 +3,7 @@ Type=Application
 Name=Berserk Timer
 Comment=Run Berserk Timer
 Exec=run.sh %F
-Icon=./assets/icon.png
+Icon=src\assets\favicon.ico
 Terminal=true
 Categories=Uchmod +x run.command
 tility;
