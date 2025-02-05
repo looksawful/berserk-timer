@@ -15,13 +15,8 @@ def on_timer_end(witness_mode, config, custom_phrase, use_gui=False, root=None):
     play_sound()
 
     if witness_mode:
-        response = cli_witness_form()
-# use this instead of response after implementing gui-witness
-    #     if use_gui:
-    #         response = show_witness_form(root)
-    #     else:
-    #         response = cli_witness_form()
-    #     log_witness_response(response)
+        safe_word = config.get("safe_word", "skip")
+        response = cli_witness_form(safe_word)
         log_witness_response(response)
         print("Witness response logged.")
     else:
@@ -98,7 +93,6 @@ def main():
 
     if args.g:
         root = run_gui_timer(timer, witness_mode, custom_phrase, config)
-        # Передаем None вместо root, если окно уже уничтожено
         on_timer_end(witness_mode, config, custom_phrase,
                      use_gui=True, root=None)
     else:

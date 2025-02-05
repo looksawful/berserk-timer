@@ -35,8 +35,6 @@ def show_witness_form(parent):
     form.mainloop()
     return result
 
-# TODO possibility to exit witness-mode without answering the question somehow
-
 
 def run_gui_timer(timer, witness_mode, custom_phrase, config):
     root = tk.Tk()

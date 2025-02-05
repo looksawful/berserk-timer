@@ -1,7 +1,35 @@
-import threading
-import time
-import msvcrt #TODO get rid of that
 from .logger import view_today_log, delete_all_logs
+import threading
+import sys
+import time
+import select
+
+try:
+    import msvcrt
+
+    def kbhit():
+        return msvcrt.kbhit()
+
+    def getch():  # type: ignore
+        return msvcrt.getch().decode('utf-8')
+except ImportError:
+    import tty
+    import termios
+
+    def kbhit():
+        dr, dw, de = select.select([sys.stdin], [], [], 0)
+        return dr != []
+
+    def getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)  # type: ignore
+        try:
+            tty.setraw(fd)  # type: ignore
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN,  # type: ignore
+                              old_settings)
+        return ch
 
 
 def run_cli_timer(timer):
@@ -51,9 +79,9 @@ def run_cli_timer(timer):
     def keyboard_listener():
         nonlocal exit_flag
         while timer.is_running() and not exit_flag:
-            if msvcrt.kbhit():
+            if kbhit():
                 try:
-                    key = msvcrt.getch().decode('utf-8').lower()
+                    key = getch().lower()
                 except UnicodeDecodeError:
                     continue
 
@@ -81,18 +109,22 @@ def run_cli_timer(timer):
     return exit_flag
 
 
-def cli_witness_form():
+def cli_witness_form(safe_word):
     """
     Asks user to enter activity description in CLI after the timer ends.
     Input cannot be empty.
+    If the user types the safe word, the function returns a special message.
+
+    :param safe_word: The safe word that, when entered, cancels witness-mode.
+    :return: User input or "Witness skipped." if safe word is entered.
     """
     while True:
         response = input(
-            "\nTimer finished. Please enter what you were doing: ").strip()
+            f"\nTimer finished. Please enter what you were doing (or type '{safe_word}' to cancel): "
+        ).strip()
+        if response.lower() == safe_word.lower():
+            return "Witness skipped."
         if response:
             return response
-        print("Input cannot be empty. Please provide a description of your activity.")
-
-
-
-#TODO should be possible to quit from witness-mode without answering the question somehow, may be via implementation of some SAFE WORD? 
+        print(
+            f"Input cannot be empty. Please provide a description of your activity, or type '{safe_word}' to cancel.")

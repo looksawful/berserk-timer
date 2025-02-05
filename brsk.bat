@@ -4,4 +4,4 @@ REM  - Duration: 10 minutes
 REM  - Witness mode enabled (-w)
 REM  - Run in CLI (without -g flag)
 
-python -m src.main 0.1 -w
+py -m src.main 10 -w
