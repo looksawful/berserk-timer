@@ -1,8 +1,9 @@
-import winsound
 import logging
-from datetime import datetime
 import os
 import glob
+from datetime import datetime
+import sys
+import subprocess
 
 LOG_DIR = "logs"
 if not os.path.exists(LOG_DIR):
@@ -18,8 +19,6 @@ logging.basicConfig(
 def log_event(message):
     logging.info(message)
 
-# TODO use log or json instead of txt?
-
 
 def log_witness_response(response):
     date_str = datetime.now().strftime("%Y-%m-%d")
@@ -27,8 +26,6 @@ def log_witness_response(response):
     with open(filename, "a", encoding="utf-8") as f:
         timestamp = datetime.now().strftime("%H:%M:%S")
         f.write(f"[{timestamp}] {response}\n")
-
-# TODO possibility to wake the logs without running the timer
 
 
 def view_today_log():
@@ -55,4 +52,38 @@ def delete_all_logs():
 
 
 def play_sound():
-    winsound.Beep(1000, 500)
+    """
+    Plays a WAV file from assets/sound.wav.
+    Uses:
+      - winsound on Windows,
+      - aplay on Linux,
+      - afplay on macOS.
+    """
+    asset_path = os.path.join(os.path.dirname(
+        __file__), "..", "assets", "sound.wav")
+    asset_path = os.path.abspath(asset_path)
+
+    if not os.path.exists(asset_path):
+        print(f"Sound file not found: {asset_path}")
+        return
+
+    if sys.platform.startswith("win"):
+        try:
+            import winsound
+            winsound.PlaySound(asset_path, winsound.SND_FILENAME)
+        except Exception as e:
+            print(f"Error playing sound on Windows: {e}")
+    elif sys.platform.startswith("linux"):
+        try:
+            subprocess.run(["aplay", asset_path], check=True)
+        except Exception as e:
+            print(f"Error playing sound on Linux: {e}")
+            print('\a', end='', flush=True)
+    elif sys.platform.startswith("darwin"):
+        try:
+            subprocess.run(["afplay", asset_path], check=True)
+        except Exception as e:
+            print(f"Error playing sound on macOS: {e}")
+            print('\a', end='', flush=True)
+    else:
+        print('\a', end='', flush=True)
