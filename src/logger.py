@@ -18,7 +18,7 @@ logging.basicConfig(
 def log_event(message):
     logging.info(message)
 
-
+#TODO use log or json instead of txt?
 def log_witness_response(response):
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
@@ -26,7 +26,7 @@ def log_witness_response(response):
         timestamp = datetime.now().strftime("%H:%M:%S")
         f.write(f"[{timestamp}] {response}\n")
 
-
+#TODO possibility to wake the logs without running the timer
 def view_today_log():
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
