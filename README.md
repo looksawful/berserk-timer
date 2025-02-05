@@ -1,18 +1,20 @@
+```
 ███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀ 
 █  █  █▀   ▀  █  ▄▀  █     ▀▄ █▀   ▀  █  ▄▀ █▄█   
 █ ▀ ▄ ██▄▄    █▀▀▌ ▄  ▀▀▀▀▄   ██▄▄    █▀▀▌  █▀▄   
 █  ▄▀ █▄   ▄▀ █  █  ▀▄▄▄▄▀    █▄   ▄▀ █  █  █  █  
 ███   ▀███▀     █             ▀███▀     █     █   
                ▀                       ▀     ▀    
-                                                  
+
+
        ▄▄▄▄▀ ▄█ █▀▄▀█ ▄███▄   █▄▄▄▄               
     ▀▀▀ █    ██ █ █ █ █▀   ▀  █  ▄▀               
         █    ██ █ ▄ █ ██▄▄    █▀▀▌                
        █     ▐█ █   █ █▄   ▄▀ █  █                
       ▀       ▐    █  ▀███▀     █                 
                   ▀            ▀
-
-# Berserk Timer
+```                                               
+# Berserk Timer 0.1
 
 Berserk Timer – a CLI timer with witness mode, and flexible duration input.
 The goal is to create a simple Windows CLI timer that will ask you what were you done for the last N minutes.
