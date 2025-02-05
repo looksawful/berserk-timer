@@ -95,4 +95,4 @@ def cli_witness_form():
 
 
 
-#TODO possibility to exit witness-mode without answering the question somehow
+#TODO should be possible to quit from witness-mode without answering the question somehow, may be via implementation of some SAFE WORD? 
