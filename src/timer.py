@@ -74,6 +74,12 @@ class Timer:
         self._thread = threading.Thread(target=self._run)
         self._thread.start()
 
+    def update_duration(self, new_duration):
+        """Update the timer's duration and remaining time."""
+        with self._lock:
+            self.duration = new_duration
+            self.remaining = new_duration
+
     def log_data(self, message):
         if self.log_without_timer:
             log_event(message)
