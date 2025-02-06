@@ -64,7 +64,7 @@ _You may want to add a shortcut to run brsrk from Windows Taskbar, but it's impo
 
 ### Windows
 
-From the root directory, run:
+From the berserk-timer directory, run:
 
 - Example: 1.5 minutes (i.e., 1 minute 30 seconds):
 
@@ -72,28 +72,21 @@ From the root directory, run:
   python -m src.main 1.5
   ```
 
-  or just run `brsrk` command.
-
 ### Linux
 
-From the root directory, run:
+From the berserk-timer directory, run:
 
 - Example: 1.5 minutes (i.e., 1 minute 30 seconds):
 
   ```bash
   python3 -m src.main 1.5 "$@"
   ```
-
-  or just run `brsrk` command.
 
 ### MacOS
-From the root directory, run:
+From the berserk-timer directory, run:
 
 - Example: 1.5 minutes (i.e., 1 minute 30 seconds):
 
   ```bash
   python3 -m src.main 1.5 "$@"
   ```
-
-  or just run `brsrk` command.
-
