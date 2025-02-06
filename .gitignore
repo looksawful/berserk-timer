@@ -5,6 +5,9 @@ __pycache__/
 *.pyd
 *.swp
 
+#Personal notes
+todos/
+
 # Virtual environment directories
 venv/
 .env/
