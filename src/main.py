@@ -26,7 +26,20 @@ def on_timer_end(witness_mode, config, custom_phrase, use_gui=False, root=None):
         print("Advice displayed.")
 
 
+ASCII_LOGO = r"""
+███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
+█  █  █▀   ▀  █  ▄▀  █     ▀▄ █▀   ▀  █  ▄▀ █▄█
+█ ▀ ▄ ██▄▄    █▀▀▌ ▄  ▀▀▀▀▄   ██▄▄    █▀▀▌  █▀▄
+█  ▄▀ █▄   ▄▀ █  █  ▀▄▄▄▄▀    █▄   ▄▀ █  █  █  █
+███   ▀███▀      █             ▀███▀     █     █
+                ▀                       ▀     ▀
+"""
+
+
 def main():
+
+    print(ASCII_LOGO)
+
     parser = argparse.ArgumentParser(description="Berserk Timer Application")
     parser.add_argument("duration", type=float, nargs="?",
                         help="Duration (in minutes by default)")
