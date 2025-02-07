@@ -4,15 +4,15 @@ import sys
 import time
 import select
 
-try:
+if sys.platform.startswith("win"):
     import msvcrt
 
     def kbhit():
         return msvcrt.kbhit()
 
-    def getch():  # type: ignore
-        return msvcrt.getch().decode('utf-8')
-except ImportError:
+    def getch():
+        return msvcrt.getch().decode("utf-8")
+else:
     import tty
     import termios
 
@@ -22,18 +22,19 @@ except ImportError:
 
     def getch():
         fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)  # type: ignore
+        old_settings = termios.tcgetattr(fd)
         try:
-            tty.setraw(fd)  # type: ignore
+            tty.setraw(fd)
             ch = sys.stdin.read(1)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN,  # type: ignore
+            termios.tcsetattr(fd, termios.TCSADRAIN,
                               old_settings)
         return ch
 
 
 def run_cli_timer(timer):
     exit_flag = False
+    suspend_display = threading.Event()
 
     def pause_action():
         timer.pause()
@@ -66,6 +67,27 @@ def run_cli_timer(timer):
         delete_all_logs()
         print("\nAll logs deleted.")
 
+    def update_duration_action():
+        suspend_display.set()
+        try:
+            user_input = input("\nEnter new duration in minutes: ")
+            new_duration = float(user_input) * 60
+            timer.update_duration(new_duration)
+            print(f"\nTimer duration updated to {new_duration/60} minutes.")
+        except ValueError:
+            print("\nInvalid input for duration update.")
+        finally:
+            suspend_display.clear()
+
+    def set_goal_action():
+        suspend_display.set()
+        try:
+            new_goal = input("\nEnter your goal: ")
+            timer.set_goal(new_goal)
+            print(f"\nGoal set to: {new_goal}")
+        finally:
+            suspend_display.clear()
+
     commands = {
         'p': pause_action,
         'r': resume_action,
@@ -73,7 +95,9 @@ def run_cli_timer(timer):
         'z': zero_action,
         'n': restart_action,
         'v': view_log_action,
-        'd': delete_logs_action
+        'd': delete_logs_action,
+        'u': update_duration_action,
+        'g': set_goal_action
     }
 
     def keyboard_listener():
@@ -84,44 +108,31 @@ def run_cli_timer(timer):
                     key = getch().lower()
                 except UnicodeDecodeError:
                     continue
-
                 if key in commands:
                     commands[key]()
-
                     if key == 'q' or key == 'z':
                         break
                 else:
-                    print("\nUnknown command. Press (p, r, q, z, n, v, d) only.")
+                    print("\nUnknown command. Press (p, r, q, z, n, v, d, u, g) only.")
             time.sleep(0.1)
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
     listener.start()
 
+    # Вывод обновляемой строки с ANSI-последовательностью "\033[K" для очистки строки
     while timer.is_running() and not exit_flag:
-        print(
-            f"Time remaining: {timer.get_remaining_time_str()}  "
-            f"(p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs)",
-            end="\r"
-        )
+        if not suspend_display.is_set():
+            print(
+                f"\r\033[KTime remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal)", end="")
         time.sleep(0.1)
-
     print()
     return exit_flag
 
 
 def cli_witness_form(safe_word):
-    """
-    Asks user to enter activity description in CLI after the timer ends.
-    Input cannot be empty.
-    If the user types the safe word, the function returns a special message.
-
-    :param safe_word: The safe word that, when entered, cancels witness-mode.
-    :return: User input or "Witness skipped." if safe word is entered.
-    """
     while True:
         response = input(
-            f"\nTimer finished. Please enter what you were doing (or type '{safe_word}' to cancel): "
-        ).strip()
+            f"\nTimer finished. Please enter what you were doing (or type '{safe_word}' to cancel): ").strip()
         if response.lower() == safe_word.lower():
             return "Witness skipped."
         if response:

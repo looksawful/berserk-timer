@@ -1,14 +1,11 @@
+# timer.py
 import time
 import threading
 from .logger import log_event
 
 
 class Timer:
-    def __init__(self, duration, log_without_timer=False):
-        """
-        :param duration: Duration in seconds.
-        :param log_without_timer: Flag to allow logging without running the timer.
-        """
+    def __init__(self, duration, log_without_timer=False, goal=None):
         self.duration = duration
         self.remaining = duration
         self._paused = False
@@ -16,6 +13,7 @@ class Timer:
         self._lock = threading.Lock()
         self._thread = threading.Thread(target=self._run)
         self.log_without_timer = log_without_timer
+        self.goal = goal
 
     def start(self):
         self._stop_event.clear()
@@ -58,6 +56,8 @@ class Timer:
     def get_remaining_time_str(self):
         remaining = int(self.get_remaining_time())
         minutes, seconds = divmod(remaining, 60)
+        if self.goal:
+            return f"{minutes:02d}:{seconds:02d} [Goal: {self.goal}]"
         return f"{minutes:02d}:{seconds:02d}"
 
     def zero(self):
@@ -75,10 +75,12 @@ class Timer:
         self._thread.start()
 
     def update_duration(self, new_duration):
-        """Update the timer's duration and remaining time."""
         with self._lock:
             self.duration = new_duration
             self.remaining = new_duration
+
+    def set_goal(self, goal):
+        self.goal = goal
 
     def log_data(self, message):
         if self.log_without_timer:

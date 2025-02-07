@@ -1,14 +1,13 @@
+# logger.py
 import logging
 import os
 import glob
 from datetime import datetime
 import sys
 import subprocess
-
 LOG_DIR = "logs"
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
-
 logging.basicConfig(
     filename=os.path.join(LOG_DIR, "berserk.log"),
     level=logging.INFO,
@@ -40,7 +39,6 @@ def view_today_log():
 
 def delete_all_logs():
     logging.shutdown()
-
     files = [os.path.join(LOG_DIR, "berserk.log")] + \
         glob.glob(os.path.join(LOG_DIR, "witness_log_*.txt"))
     for file in files:
@@ -52,21 +50,12 @@ def delete_all_logs():
 
 
 def play_sound():
-    """
-    Plays a WAV file from assets/sound.wav.
-    Uses:
-      - winsound on Windows,
-      - aplay on Linux,
-      - afplay on macOS.
-    """
     asset_path = os.path.join(os.path.dirname(
         __file__), "..", "assets", "sound.wav")
     asset_path = os.path.abspath(asset_path)
-
     if not os.path.exists(asset_path):
         print(f"Sound file not found: {asset_path}")
         return
-
     if sys.platform.startswith("win"):
         try:
             import winsound

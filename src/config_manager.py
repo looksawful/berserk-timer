@@ -1,6 +1,6 @@
+# config_manager.py
 import json
 import os
-
 DEFAULT_CONFIG = {
     "messages": [
         "Drink water",
