@@ -1,17 +1,17 @@
-# gui.py
 import tkinter as tk
 from tkinter import messagebox, simpledialog
+from typing import Optional
 from .logger import view_today_log, delete_all_logs
 
 
-def show_message(message, parent=None):
+def show_message(message: str, parent: Optional[tk.Tk] = None) -> None:
     messagebox.showinfo("Timer Finished", message, parent=parent)
 
 
-def show_witness_form(parent):
-    result = None
+def show_witness_form(parent: tk.Tk) -> Optional[str]:
+    result: Optional[str] = None
 
-    def submit():
+    def submit() -> None:
         nonlocal result
         if not entry.get().strip():
             messagebox.showerror(
@@ -29,45 +29,58 @@ def show_witness_form(parent):
     return result
 
 
-def run_gui_timer(timer, witness_mode, custom_phrase, config):
+ASCII_LOGO = r"""
+███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
+█  █  █▀   ▀  █  ▄▀  █     ▀▄ █▀   ▀  █  ▄▀ █▄█
+█ ▀ ▄ ██▄▄    █▀▀▌ ▄  ▀▀▀▀▄   ██▄▄    █▀▀▌  █▀▄
+█  ▄▀ █▄   ▄▀ █  █  ▀▄▄▄▄▀    █▄   ▄▀ █  █  █  █
+███   ▀███▀      █             ▀███▀     █     █
+                ▀                       ▀     ▀
+"""
+
+
+def run_gui_timer(timer, witness_mode: bool, custom_phrase: Optional[str], config: dict) -> tk.Tk:
     root = tk.Tk()
     root.title("Berserk Timer")
+    logo_label = tk.Label(root, text=ASCII_LOGO, font=(
+        "Courier New", 10), justify="left")
+    logo_label.grid(row=0, column=0, columnspan=4, pady=(20, 0))
     time_label = tk.Label(
         root, text=f"Time remaining: {timer.get_remaining_time_str()}", font=("Helvetica", 24))
-    time_label.grid(row=0, column=0, columnspan=4, pady=20)
+    time_label.grid(row=0, column=0, columnspan=4, pady=4)
 
-    def pause():
+    def pause() -> None:
         timer.pause()
 
-    def resume():
+    def resume() -> None:
         timer.resume()
 
-    def quit_timer():
+    def quit_timer() -> None:
         timer.stop()
         root.destroy()
 
-    def zero():
+    def zero() -> None:
         timer.zero()
         root.destroy()
 
-    def restart():
+    def restart() -> None:
         timer.restart()
 
-    def view_log():
+    def view_log() -> None:
         log_content = view_today_log()
         messagebox.showinfo("Today's Log", log_content, parent=root)
 
-    def delete_logs():
+    def delete_logs() -> None:
         delete_all_logs()
         messagebox.showinfo("Logs", "All logs deleted.", parent=root)
 
-    def update_duration():
+    def update_duration() -> None:
         new_duration = simpledialog.askfloat(
             "Update Duration", "Enter new duration in minutes:", parent=root)
         if new_duration is not None:
             timer.update_duration(new_duration * 60)
 
-    def set_goal():
+    def set_goal() -> None:
         new_goal = simpledialog.askstring(
             "Set Goal", "Enter your goal:", parent=root)
         if new_goal is not None:
@@ -93,7 +106,7 @@ def run_gui_timer(timer, witness_mode, custom_phrase, config):
     tk.Button(button_frame, text="Set Goal", command=set_goal).grid(
         row=2, column=1, padx=5, pady=5)
 
-    def update_label():
+    def update_label() -> None:
         try:
             if timer.get_remaining_time() <= 0:
                 time_label.config(text="Time's up!")
@@ -109,5 +122,5 @@ def run_gui_timer(timer, witness_mode, custom_phrase, config):
     return root
 
 
-def ask_restart_gui(root):
+def ask_restart_gui(root: tk.Tk) -> bool:
     return messagebox.askyesno("Restart Timer", "Do you want to restart the timer?", parent=root)

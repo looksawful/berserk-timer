@@ -1,7 +1,8 @@
-# config_manager.py
 import json
 import os
-DEFAULT_CONFIG = {
+from typing import Any, Dict
+
+DEFAULT_CONFIG: Dict[str, Any] = {
     "messages": [
         "Drink water",
         "Do push-ups",
@@ -23,10 +24,12 @@ DEFAULT_CONFIG = {
 }
 
 
-def load_config(config_path="config.json"):
+def load_config(config_path: str = "config.json") -> Dict[str, Any]:
     if not os.path.exists(config_path):
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(DEFAULT_CONFIG, f, indent=4)
-        return DEFAULT_CONFIG
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        return DEFAULT_CONFIG.copy()
+    else:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        return config

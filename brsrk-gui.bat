@@ -5,4 +5,3 @@ REM  - Witness mode enabled (-w)
 REM  - Run in CLI (without -g flag)
 
 py -m src.main 10 -g -w %*
-pause

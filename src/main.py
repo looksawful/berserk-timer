@@ -1,30 +1,12 @@
-# main.py
 import argparse
 import sys
 import random
+from typing import Optional
 from .config_manager import load_config
 from .timer import Timer
 from .cli import run_cli_timer, cli_witness_form
 from .gui import run_gui_timer
 from .logger import log_event, log_witness_response, play_sound
-from src import timer
-
-
-def on_timer_end(witness_mode, config, custom_phrase, use_gui=False, root=None):
-    play_sound()
-    if witness_mode:
-        safe_word = config.get("safe_word", "skip")
-        response = cli_witness_form(safe_word)
-        log_witness_response(response)
-        print("Witness response logged.")
-    message = custom_phrase if custom_phrase else random.choice(
-        config.get("messages", []))
-    if use_gui:
-        run_gui_timer(timer, witness_mode, custom_phrase, config)
-    else:
-        print("\nAdvice:", message)
-        print("Advice displayed.")
-
 
 ASCII_LOGO = r"""
 ███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
@@ -36,10 +18,26 @@ ASCII_LOGO = r"""
 """
 
 
-def main():
+def on_timer_end(timer: Timer, witness_mode: bool, config: dict, custom_phrase: Optional[str],
+                 use_gui: bool = False, root: Optional[object] = None) -> None:
+    play_sound()
+    if witness_mode:
+        safe_word = config.get("safe_word", "skip")
+        response = cli_witness_form(safe_word)
+        if response is not None:
+            log_witness_response(response)
+            print("Witness response logged.")
+    message = custom_phrase if custom_phrase else random.choice(
+        config.get("messages", []))
+    if use_gui:
+        run_gui_timer(timer, witness_mode, custom_phrase, config)
+    else:
+        print("\nAdvice:", message)
+        print("Advice displayed.")
 
+
+def main() -> None:
     print(ASCII_LOGO)
-
     parser = argparse.ArgumentParser(description="Berserk Timer Application")
     parser.add_argument("duration", type=float, nargs="?",
                         help="Duration (in minutes by default)")
@@ -64,7 +62,7 @@ def main():
                         help="Interpret the provided duration as seconds instead of minutes")
     args = parser.parse_args()
     config = load_config()
-    duration = None
+    duration: Optional[float] = None
     if args.duration is not None:
         duration = args.duration if args.seconds else args.duration * 60
     elif args.x:
@@ -84,18 +82,19 @@ def main():
         sys.exit(1)
     if (args.x or args.s or args.m or args.l or args.X or args.t) and args.seconds:
         duration = duration * 60
-    witness_mode = args.w or config.get("witness_mode", False)
-    custom_phrase = args.c
+    witness_mode: bool = args.w or config.get("witness_mode", False)
+    custom_phrase: Optional[str] = args.c
     goal = input("Enter your goal (or leave empty): ").strip() or None
     while True:
-        timer = Timer(duration, goal=goal)
+        timer_instance = Timer(duration, goal=goal)
         log_event(
             f"Timer started for {duration/60 if not args.seconds else duration} {'minutes' if not args.seconds else 'seconds'}. Witness mode: {witness_mode}. Custom message: {custom_phrase}. Goal: {goal}")
-        timer.start()
+        timer_instance.start()
         if args.g:
-            root = run_gui_timer(timer, witness_mode, custom_phrase, config)
-            on_timer_end(witness_mode, config, custom_phrase,
-                         use_gui=True, root=root)
+            root = run_gui_timer(
+                timer_instance, witness_mode, custom_phrase, config)
+            on_timer_end(timer_instance, witness_mode, config,
+                         custom_phrase, use_gui=True, root=root)
             from tkinter import messagebox
             restart = messagebox.askyesno(
                 "Restart Timer", "Do you want to restart the timer?")
@@ -104,12 +103,13 @@ def main():
             else:
                 break
         else:
-            user_exited = run_cli_timer(timer)
+            user_exited = run_cli_timer(timer_instance)
             if user_exited:
                 log_event("Timer exited by user.")
                 print("Exiting the timer...")
                 sys.exit(0)
-            on_timer_end(witness_mode, config, custom_phrase, use_gui=False)
+            on_timer_end(timer_instance, witness_mode,
+                         config, custom_phrase, use_gui=False)
             restart_choice = input("Restart timer? (y/n): ").lower().strip()
             if restart_choice == 'y':
                 continue

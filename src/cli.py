@@ -1,73 +1,74 @@
-from .logger import view_today_log, delete_all_logs
-import threading
 import sys
 import time
+import threading
 import select
+import shutil
+from typing import Callable, Dict
+from .logger import view_today_log, delete_all_logs
 
 if sys.platform.startswith("win"):
     import msvcrt
 
-    def kbhit():
+    def kbhit() -> bool:
         return msvcrt.kbhit()
 
-    def getch():
+    def getch() -> str:
         return msvcrt.getch().decode("utf-8")
 else:
     import tty
     import termios
 
-    def kbhit():
-        dr, dw, de = select.select([sys.stdin], [], [], 0)
-        return dr != []
+    def kbhit() -> bool:
+        dr, _, _ = select.select([sys.stdin], [], [], 0)
+        return bool(dr)
 
-    def getch():
+    def getch() -> str:
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         try:
             tty.setraw(fd)
             ch = sys.stdin.read(1)
         finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN,
-                              old_settings)
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
 
 
-def run_cli_timer(timer):
+def run_cli_timer(timer) -> bool:
     exit_flag = False
     suspend_display = threading.Event()
 
-    def pause_action():
+    def pause_action() -> None:
         timer.pause()
         print("\nTimer paused. Press 'r' to resume.")
 
-    def resume_action():
+    def resume_action() -> None:
         timer.resume()
         print("\nTimer resumed.")
 
-    def stop_action():
+    def stop_action() -> None:
         nonlocal exit_flag
         timer.stop()
         exit_flag = True
         print("\nTimer stopped by user.")
 
-    def zero_action():
+    def zero_action() -> None:
         timer.zero()
         print("\nTimer zeroed.")
 
-    def restart_action():
+    def restart_action() -> None:
         timer.restart()
         print("\nTimer restarted.")
 
-    def view_log_action():
+    def view_log_action() -> None:
         log_content = view_today_log()
         print("\nToday's Witness Log:")
         print(log_content)
 
-    def delete_logs_action():
+    def delete_logs_action() -> None:
         delete_all_logs()
         print("\nAll logs deleted.")
 
-    def update_duration_action():
+    def update_duration_action() -> None:
         suspend_display.set()
         try:
             user_input = input("\nEnter new duration in minutes: ")
@@ -79,7 +80,7 @@ def run_cli_timer(timer):
         finally:
             suspend_display.clear()
 
-    def set_goal_action():
+    def set_goal_action() -> None:
         suspend_display.set()
         try:
             new_goal = input("\nEnter your goal: ")
@@ -87,8 +88,7 @@ def run_cli_timer(timer):
             print(f"\nGoal set to: {new_goal}")
         finally:
             suspend_display.clear()
-
-    commands = {
+    commands: Dict[str, Callable[[], None]] = {
         'p': pause_action,
         'r': resume_action,
         'q': stop_action,
@@ -100,7 +100,7 @@ def run_cli_timer(timer):
         'g': set_goal_action
     }
 
-    def keyboard_listener():
+    def keyboard_listener() -> None:
         nonlocal exit_flag
         while timer.is_running() and not exit_flag:
             if kbhit():
@@ -110,26 +110,24 @@ def run_cli_timer(timer):
                     continue
                 if key in commands:
                     commands[key]()
-                    if key == 'q' or key == 'z':
+                    if key in ('q', 'z'):
                         break
                 else:
                     print("\nUnknown command. Press (p, r, q, z, n, v, d, u, g) only.")
             time.sleep(0.1)
-
     listener = threading.Thread(target=keyboard_listener, daemon=True)
     listener.start()
-
-    # Вывод обновляемой строки с ANSI-последовательностью "\033[K" для очистки строки
     while timer.is_running() and not exit_flag:
         if not suspend_display.is_set():
-            print(
-                f"\r\033[KTime remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal)", end="")
+            width = shutil.get_terminal_size().columns
+            msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal)"
+            print(f"\r\033[K{msg.ljust(width)}", end="", flush=True)
         time.sleep(0.1)
     print()
     return exit_flag
 
 
-def cli_witness_form(safe_word):
+def cli_witness_form(safe_word: str) -> str:
     while True:
         response = input(
             f"\nTimer finished. Please enter what you were doing (or type '{safe_word}' to cancel): ").strip()

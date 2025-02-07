@@ -1,10 +1,11 @@
-# logger.py
 import logging
 import os
 import glob
 from datetime import datetime
 import sys
 import subprocess
+from typing import Optional
+
 LOG_DIR = "logs"
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
@@ -15,11 +16,11 @@ logging.basicConfig(
 )
 
 
-def log_event(message):
+def log_event(message: str) -> None:
     logging.info(message)
 
 
-def log_witness_response(response):
+def log_witness_response(response: str) -> None:
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
     with open(filename, "a", encoding="utf-8") as f:
@@ -27,7 +28,7 @@ def log_witness_response(response):
         f.write(f"[{timestamp}] {response}\n")
 
 
-def view_today_log():
+def view_today_log() -> str:
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
     if os.path.exists(filename):
@@ -37,7 +38,7 @@ def view_today_log():
         return "No log for today."
 
 
-def delete_all_logs():
+def delete_all_logs() -> None:
     logging.shutdown()
     files = [os.path.join(LOG_DIR, "berserk.log")] + \
         glob.glob(os.path.join(LOG_DIR, "witness_log_*.txt"))
@@ -49,7 +50,7 @@ def delete_all_logs():
                 print(f"Error deleting file {file}: {e}")
 
 
-def play_sound():
+def play_sound() -> None:
     asset_path = os.path.join(os.path.dirname(
         __file__), "..", "assets", "sound.wav")
     asset_path = os.path.abspath(asset_path)
