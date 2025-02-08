@@ -5,7 +5,6 @@ from typing import Optional
 from .config_manager import load_config
 from .timer import Timer
 from .cli import run_cli_timer, cli_witness_form
-from .gui import run_gui_timer
 from .logger import log_event, log_witness_response, play_sound
 
 ASCII_LOGO = r"""
@@ -59,7 +58,7 @@ def main() -> None:
                         help="Use GUI mode (experimental)")
     parser.add_argument("-c", type=str, help="Custom advice message")
     parser.add_argument("--seconds", action="store_true",
-                        help="Interpret the provided duration as seconds instead of minutes")
+                        help="Interpret the provided duration as seconds innstead of minutes")
     args = parser.parse_args()
     config = load_config()
     duration: Optional[float] = None
@@ -85,11 +84,16 @@ def main() -> None:
     witness_mode: bool = args.w or config.get("witness_mode", False)
     custom_phrase: Optional[str] = args.c
     goal = input("Enter your goal (or leave empty): ").strip() or None
+
+    if args.g:
+        from .gui import run_gui_timer
+
     while True:
         timer_instance = Timer(duration, goal=goal)
         log_event(
             f"Timer started for {duration/60 if not args.seconds else duration} {'minutes' if not args.seconds else 'seconds'}. Witness mode: {witness_mode}. Custom message: {custom_phrase}. Goal: {goal}")
         timer_instance.start()
+        log_event("Timer ended.")
         if args.g:
             root = run_gui_timer(
                 timer_instance, witness_mode, custom_phrase, config)
@@ -115,7 +119,7 @@ def main() -> None:
                 continue
             else:
                 break
-        log_event("Timer ended.")
+        
     log_event("Application terminated.")
 
 

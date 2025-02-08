@@ -31,3 +31,6 @@ build/
 # IDE settings
 .vscode/
 .idea/
+
+.venv
+venv
