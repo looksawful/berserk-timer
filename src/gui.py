@@ -19,6 +19,7 @@ def show_witness_form(parent: tk.Tk) -> Optional[str]:
             return
         result = entry.get().strip()
         form.destroy()
+
     form = tk.Toplevel(parent)
     form.title("Witness Mode")
     tk.Label(form, text="What were you doing?").pack(padx=20, pady=10)
@@ -85,6 +86,7 @@ def run_gui_timer(timer, witness_mode: bool, custom_phrase: Optional[str], confi
             "Set Goal", "Enter your goal:", parent=root)
         if new_goal is not None:
             timer.set_goal(new_goal)
+
     button_frame = tk.Frame(root)
     button_frame.grid(row=1, column=0, columnspan=4, pady=10)
     tk.Button(button_frame, text="Pause", command=pause).grid(

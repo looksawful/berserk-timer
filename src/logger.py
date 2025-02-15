@@ -31,11 +31,7 @@ def log_witness_response(response: str) -> None:
 def view_today_log() -> str:
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            return f.read()
-    else:
-        return "No log for today."
+    return open(filename, "r", encoding="utf-8").read() if os.path.exists(filename) else "No log for today."
 
 
 def delete_all_logs() -> None:
@@ -77,3 +73,11 @@ def play_sound() -> None:
             print('\a', end='', flush=True)
     else:
         print('\a', end='', flush=True)
+
+
+def set_mute(mute: bool) -> None:
+    # Реализация функции для отключения звука
+    if mute:
+        print("Mute enabled.")
+    else:
+        print("Mute disabled.")

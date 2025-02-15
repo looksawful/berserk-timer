@@ -74,7 +74,7 @@ def run_cli_timer(timer) -> bool:
             user_input = input("\nEnter new duration in minutes: ")
             new_duration = float(user_input) * 60
             timer.update_duration(new_duration)
-            print(f"\nTimer duration updated to {new_duration/60} minutes.")
+            print(f"\nTimer duration updated to {new_duration / 60} minutes.")
         except ValueError:
             print("\nInvalid input for duration update.")
         finally:
@@ -88,6 +88,7 @@ def run_cli_timer(timer) -> bool:
             print(f"\nGoal set to: {new_goal}")
         finally:
             suspend_display.clear()
+
     commands: Dict[str, Callable[[], None]] = {
         'p': pause_action,
         'r': resume_action,
@@ -115,6 +116,7 @@ def run_cli_timer(timer) -> bool:
                 else:
                     print("\nUnknown command. Press (p, r, q, z, n, v, d, u, g) only.")
             time.sleep(0.1)
+
     listener = threading.Thread(target=keyboard_listener, daemon=True)
     listener.start()
     while timer.is_running() and not exit_flag:
