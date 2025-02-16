@@ -1,4 +1,4 @@
-# Berserk Timer 0.1.1-beta
+# Berserk Timer 0.1.2-beta
 
 ```plaintext
 ███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
@@ -17,7 +17,7 @@
                                  ▀
 ```
 
-- [Berserk Timer 0.1.1-beta](#berserk-timer-011-beta)
+- [Berserk Timer 0.1.2-beta](#berserk-timer-012-beta)
   - [Features](#features)
   - [Installing on Windows](#installing-on-windows)
     - [Optional](#optional)
@@ -27,7 +27,7 @@
     - [MacOS](#macos)
 
 Berserk Timer – a CLI timer with witness mode, and flexible duration input.
-The goal was to create a simple Windows CLI timer that asks you what you have been doing for the last N-minutes. I couldn't find any free tool that suits my needs: flexibility, simplicity and no-adds in one. That's why I decided to create Berserk Timer. It helps me managing my time a lot so I decided to share it.
+The goal was to create a simple Windows CLI timer that asks you what you have been doing for the last session. I couldn't find any free tool for Windows that suits my needs: flexibility, simplicity and no-adds in one. That's why I decided to create Berserk Timer. It helps me managing my time a lot so I decided to share it.
 
 The tool provides:
 
@@ -47,6 +47,8 @@ I hope this tool will make it easier for others to track time and stay productiv
   Use the flags `-x`, `-s`, `-m`, `-l`, `-X`, or `-t` to select predefined durations (in minutes). You can add the presets into config.json
 - **Witness Mode:**
   After the timer finishes (whether it was paused, quit, or stopped in another way), the user will be asked the question "What were you doing?" – you can enter text in any language (or type 'skip' to cancel) and in the end of the week there are a list of your activities for each day and hour.
+- **Silent Mode::**
+  The timer can be launched in mute mode (using the --mute flag), and during a running timer you can toggle silent mode on/off with the m command. In silent mode, the end-of-timer melody will not play.
 - **Interfaces:**
   Both CLI and GUI modes are supported, but I personally prefer to use CLI whenever it is possible, so GUI is still very experimental and rude. Use the `-g` flag to start the graphical interface for your own risk.
 - **Logging:**
