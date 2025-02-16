@@ -1,3 +1,4 @@
+# cli.py
 import sys
 import time
 import threading
@@ -80,6 +81,11 @@ def run_cli_timer(timer) -> bool:
         finally:
             suspend_display.clear()
 
+    def set_mute_action():
+        timer.toggle_silent()  # Toggle silent mode in timer
+        status = "enabled" if timer.is_silent() else "disabled"
+        print(f"\nSilent mode {status}.")
+
     def set_goal_action() -> None:
         suspend_display.set()
         try:
@@ -98,7 +104,8 @@ def run_cli_timer(timer) -> bool:
         'v': view_log_action,
         'd': delete_logs_action,
         'u': update_duration_action,
-        'g': set_goal_action
+        'g': set_goal_action,
+        'm': set_mute_action
     }
 
     def keyboard_listener() -> None:
@@ -114,7 +121,8 @@ def run_cli_timer(timer) -> bool:
                     if key in ('q', 'z'):
                         break
                 else:
-                    print("\nUnknown command. Press (p, r, q, z, n, v, d, u, g) only.")
+                    print(
+                        "\nUnknown command. Press (p, r, q, z, n, v, d, u, g, m) only.")
             time.sleep(0.1)
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
@@ -122,7 +130,7 @@ def run_cli_timer(timer) -> bool:
     while timer.is_running() and not exit_flag:
         if not suspend_display.is_set():
             width = shutil.get_terminal_size().columns
-            msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal)"
+            msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal, m: silent mode)"
             print(f"\r\033[K{msg.ljust(width)}", end="", flush=True)
         time.sleep(0.1)
     print()

@@ -10,6 +10,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "Stretch your legs",
         "Take a breath",
         "Take a break",
+        "Drink tea",
         "Read a few pages"
     ],
     "presets": {
@@ -20,7 +21,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "xl": 25,
         "test": 0.1
     },
-    "witness_mode": False
+    "witness_mode": True,
 }
 
 

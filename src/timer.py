@@ -14,6 +14,7 @@ class Timer:
         self._thread = threading.Thread(target=self._run)
         self.log_without_timer = log_without_timer
         self.goal = goal
+        self._silent = False
 
     def start(self) -> None:
         self._stop_event.clear()
@@ -87,3 +88,9 @@ class Timer:
             log_event(message)
         else:
             print("Timer must be running to log data.")
+
+    def toggle_silent(self) -> None:
+        self._silent = not self._silent
+
+    def is_silent(self) -> bool:
+        return self._silent

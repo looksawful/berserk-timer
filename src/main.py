@@ -41,7 +41,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--seconds", action="store_true",
                         help="Interpret duration as seconds")
     parser.add_argument("--mute", action="store_true",
-                        help="Launch in mute mode")
+                        help="Launch in silent mode")
     return parser.parse_args()
 
 
@@ -67,7 +67,8 @@ def calculate_duration(args: argparse.Namespace, config: dict) -> Optional[float
 
 def on_timer_end(timer: Timer, witness_mode: bool, config: dict, custom_phrase: Optional[str], use_gui: bool = False, root: Optional[object] = None) -> None:
     import threading
-    threading.Thread(target=play_sound, daemon=True).start()
+    if not timer.is_silent():
+        threading.Thread(target=play_sound, daemon=True).start()
     if witness_mode:
         safe_word = config.get("safe_word", "skip")
         response = cli_witness_form(safe_word)
@@ -131,7 +132,7 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
             on_timer_end(timer_instance, witness_mode,
                          config, custom_phrase, use_gui=False)
             restart_choice = input("Restart timer? (y/n): ").lower().strip()
-            if restart_choice != 'y':
+            if restart_choice != 'y' and restart_choice != 'д':
                 break
         first_iteration = False
 

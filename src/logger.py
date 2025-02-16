@@ -78,6 +78,6 @@ def play_sound() -> None:
 def set_mute(mute: bool) -> None:
     # Реализация функции для отключения звука
     if mute:
-        print("Mute enabled.")
+        print("Sound is off.")
     else:
-        print("Mute disabled.")
+        print("Sound is on.")
