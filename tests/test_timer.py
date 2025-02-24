@@ -1,4 +1,4 @@
-from src import Timer
+from src.timer import Timer
 
 
 def test_toggle_silent():

@@ -1,3 +1,3 @@
 @echo off
-py -m src.main 10 -w %*
+py -m src.main 25 -w %*
 pause

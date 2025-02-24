@@ -1,4 +1,3 @@
-# cli.py
 import sys
 import time
 import threading
