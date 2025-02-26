@@ -14,7 +14,6 @@
         █    ██  █   █  ██▄▄    █▀▀█▌
        █     ▐█      █  █▄   ▄▀ █   █
       ▀       ▐     ▀   ▀███▀      █
-                                 ▀
 ```
 
 - [Berserk Timer 0.1.2-beta](#berserk-timer-012-beta)

@@ -4,7 +4,11 @@ import threading
 import select
 import shutil
 from typing import Callable, Dict
+from rich.console import Console
+from rich.text import Text
 from .logger import view_today_log, delete_all_logs
+
+console = Console()
 
 if sys.platform.startswith("win"):
     import msvcrt
@@ -39,34 +43,34 @@ def run_cli_timer(timer) -> bool:
 
     def pause_action() -> None:
         timer.pause()
-        print("\nTimer paused. Press 'r' to resume.")
+        console.print("[yellow]Timer paused. Press 'r' to resume.[/yellow]")
 
     def resume_action() -> None:
         timer.resume()
-        print("\nTimer resumed.")
+        console.print("[green]Timer resumed.[/green]")
 
     def stop_action() -> None:
         nonlocal exit_flag
         timer.stop()
         exit_flag = True
-        print("\nTimer stopped by user.")
+        console.print("[red]Timer stopped by user.[/red]")
 
     def zero_action() -> None:
         timer.zero()
-        print("\nTimer zeroed.")
+        console.print("[blue]Timer zeroed.[/blue]")
 
     def restart_action() -> None:
         timer.restart()
-        print("\nTimer restarted.")
+        console.print("[cyan]Timer restarted.[/cyan]")
 
     def view_log_action() -> None:
         log_content = view_today_log()
-        print("\nToday's Witness Log:")
-        print(log_content)
+        console.print("[magenta]Today's Witness Log:[/magenta]")
+        console.print(log_content)
 
     def delete_logs_action() -> None:
         delete_all_logs()
-        print("\nAll logs deleted.")
+        console.print("[bold red]All logs deleted.[/bold red]")
 
     def update_duration_action() -> None:
         suspend_display.set()
@@ -74,23 +78,24 @@ def run_cli_timer(timer) -> bool:
             user_input = input("\nEnter new duration in minutes: ")
             new_duration = float(user_input) * 60
             timer.update_duration(new_duration)
-            print(f"\nTimer duration updated to {new_duration / 60} minutes.")
+            console.print(
+                f"[green]Timer duration updated to {new_duration / 60} minutes.[/green]")
         except ValueError:
-            print("\nInvalid input for duration update.")
+            console.print("[red]Invalid input for duration update.[/red]")
         finally:
             suspend_display.clear()
 
     def set_mute_action():
         timer.toggle_silent()  # Toggle silent mode in timer
         status = "enabled" if timer.is_silent() else "disabled"
-        print(f"\nSilent mode {status}.")
+        console.print(f"[yellow]Silent mode {status}.[/yellow]")
 
     def set_goal_action() -> None:
         suspend_display.set()
         try:
             new_goal = input("\nEnter your goal: ")
             timer.set_goal(new_goal)
-            print(f"\nGoal set to: {new_goal}")
+            console.print(f"[blue]Goal set to: {new_goal}[/blue]")
         finally:
             suspend_display.clear()
 
@@ -120,8 +125,8 @@ def run_cli_timer(timer) -> bool:
                     if key in ('q', 'z'):
                         break
                 else:
-                    print(
-                        "\nUnknown command. Press (p, r, q, z, n, v, d, u, g, m) only.")
+                    console.print(
+                        "\n[red]Unknown command. Press (p, r, q, z, n, v, d, u, g, m) only.[/red]")
             time.sleep(0.1)
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
@@ -130,9 +135,9 @@ def run_cli_timer(timer) -> bool:
         if not suspend_display.is_set():
             width = shutil.get_terminal_size().columns
             msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal, m: silent mode)"
-            print(f"\r\033[K{msg.ljust(width)}", end="", flush=True)
+            print(f"\r{msg.ljust(width)}", end="", flush=True)
         time.sleep(0.1)
-    print()
+    console.print()
     return exit_flag
 
 
@@ -144,5 +149,5 @@ def cli_witness_form(safe_word: str) -> str:
             return "Witness skipped."
         if response:
             return response
-        print(
-            f"Input cannot be empty. Please provide a description of your activity, or type '{safe_word}' to cancel.")
+        console.print(
+            f"[red]Input cannot be empty. Please provide a description of your activity, or type '{safe_word}' to cancel.[/red]")
