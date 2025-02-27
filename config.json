@@ -3,7 +3,13 @@
         "Drink water",
         "Do push-ups",
         "Take a short walk",
-        "Stretch your legs"
+        "Stretch your legs",
+        "japaneese",
+        "clear work files",
+        "refactor pets",
+        "Hands exercises",
+        "Type",
+        "Read the book"
     ],
     "presets": {
         "xs": 5,
@@ -13,6 +19,6 @@
         "xl": 25,
         "test": 1
     },
-    "witness_mode": false,
+    "witness_mode": true,
     "safe_word": "q"
 }
