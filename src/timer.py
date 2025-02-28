@@ -1,3 +1,4 @@
+"""Module timer.py: Implements a Timer class for the Berserk Timer application."""
 import time
 import threading
 from typing import Optional
@@ -6,6 +7,15 @@ from .logger import log_event
 
 class Timer:
     def __init__(self, duration: float, log_without_timer: bool = False, goal: Optional[str] = None) -> None:
+        """Initializes the Timer instance.
+        Args:
+            duration (float): Duration in seconds.
+            log_without_timer (bool): Flag to log data without running timer.
+            goal (Optional[str]): Optional goal associated with the timer.
+        Returns:
+            None
+        """
+        self.duration = duration
         self.duration = duration
         self.remaining = duration
         self._paused = False
@@ -87,7 +97,7 @@ class Timer:
         if self.log_without_timer:
             log_event(message)
         else:
-            print("Timer must be running to log data.")
+            logging.error("Timer must be running to log data.")
 
     def toggle_silent(self) -> None:
         self._silent = not self._silent

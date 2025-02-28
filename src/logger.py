@@ -1,3 +1,4 @@
+"""Module logger.py: Provides logging functionalities for the Berserk Timer application."""
 import logging
 import os
 import glob
@@ -17,6 +18,13 @@ logging.basicConfig(
 
 
 def log_event(message: str) -> None:
+    """Logs an event message using logging.info.
+    Args:
+        message (str): Event message.
+    Returns:
+        None
+    """
+    logging.info(message)
     logging.info(message)
 
 

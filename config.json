@@ -9,7 +9,10 @@
         "refactor pets",
         "Hands exercises",
         "Type",
-        "Read the book"
+        "Read the book", 
+        "write a code for pets",
+        "Do your daily exercises",
+        ""
     ],
     "presets": {
         "xs": 5,

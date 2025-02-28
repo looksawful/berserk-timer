@@ -1,3 +1,5 @@
+"""Module cli.py: CLI interface for the Berserk Timer application."""
+import logging
 import sys
 import time
 import threading
@@ -38,6 +40,13 @@ else:
 
 
 def run_cli_timer(timer) -> bool:
+    """Runs the command-line timer interface.
+    Args:
+        timer: Timer instance.
+    Returns:
+        bool: True if the user exited the timer, False otherwise.
+    """
+    exit_flag = False
     exit_flag = False
     suspend_display = threading.Event()
 
@@ -135,7 +144,7 @@ def run_cli_timer(timer) -> bool:
         if not suspend_display.is_set():
             width = shutil.get_terminal_size().columns
             msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal, m: silent mode)"
-            print(f"\r{msg.ljust(width)}", end="", flush=True)
+            logging.info(msg.ljust(width))
         time.sleep(0.1)
     console.print()
     return exit_flag

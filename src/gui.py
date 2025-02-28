@@ -1,3 +1,4 @@
+"""Module gui.py: Provides GUI interface for the Berserk Timer application."""
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from typing import Optional
@@ -5,6 +6,14 @@ from .logger import view_today_log, delete_all_logs
 
 
 def show_message(message: str, parent: Optional[tk.Tk] = None) -> None:
+    """Displays an informational message in a messagebox.
+    Args:
+        message (str): Message to display.
+        parent (Optional[tk.Tk]): Parent tkinter window.
+    Returns:
+        None
+    """
+    messagebox.showinfo("Timer Finished", message, parent=parent)
     messagebox.showinfo("Timer Finished", message, parent=parent)
 
 
@@ -41,6 +50,16 @@ ASCII_LOGO = r"""
 
 
 def run_gui_timer(timer, witness_mode: bool, custom_phrase: Optional[str], config: dict) -> tk.Tk:
+    """Runs the GUI timer interface using tkinter.
+    Args:
+        timer: Timer instance.
+        witness_mode (bool): Flag for witness mode.
+        custom_phrase (Optional[str]): Custom message.
+        config (dict): Configuration dictionary.
+    Returns:
+        tk.Tk: The tkinter root window.
+    """
+    root = tk.Tk()
     root = tk.Tk()
     root.title("Berserk Timer")
     logo_label = tk.Label(root, text=ASCII_LOGO, font=(

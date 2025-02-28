@@ -1,3 +1,6 @@
+"""Module main.py: Entry point for the Berserk Timer application.
+It handles argument parsing, configuration loading, and timer loop execution."""
+import logging
 import argparse
 import sys
 import random
@@ -26,6 +29,7 @@ ASCII_LOGO: str = r"""
 
 
 def parse_arguments() -> argparse.Namespace:
+    """Parses command line arguments and returns an argparse.Namespace object."""
     parser = argparse.ArgumentParser(description="Berserk Timer Application")
     parser.add_argument("duration", type=float, nargs="?",
                         help="Duration (in minutes by default, or seconds if --seconds is specified)")
@@ -53,6 +57,13 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def calculate_duration(args: argparse.Namespace, config: dict) -> Optional[float]:
+    """Calculates timer duration based on provided arguments and configuration.
+    Args:
+        args (argparse.Namespace): Parsed command line arguments.
+        config (dict): Configuration dictionary.
+    Returns:
+        Optional[float]: Duration in seconds or None if unspecified.
+    """
     if args.duration is not None:
         factor = 1 if args.seconds else 60
         return args.duration * factor
@@ -89,7 +100,7 @@ def on_timer_end(timer: Timer, witness_mode: bool, config: dict, custom_phrase: 
         else:
             run_gui_timer(timer, witness_mode, custom_phrase, config)
     else:
-        print("\nAdvice:", message)
+        logging.info(f"Advice: {message}")
 
 
 def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[float], witness_mode: bool, custom_phrase: Optional[str], goal: Optional[str], interactive_mode: bool) -> None:
@@ -99,14 +110,14 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
             while True:
                 user_input = input("Enter timer duration in minutes: ").strip()
                 if not user_input:
-                    print("Duration is required. Please enter a number.")
+                    logging.error("Duration is required. Please enter a number.")
                     continue
                 try:
                     duration_minutes = float(user_input)
                     duration = duration_minutes * 60
                     break
                 except ValueError:
-                    print("Invalid input. Please enter a numeric value.")
+                    logging.error("Invalid input. Please enter a numeric value.")
             goal = input("Enter your goal (or leave empty): ").strip() or None
 
         if interactive_mode:
@@ -120,7 +131,7 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
         log_event(
             f"Timer started for {display_duration} {unit}. Witness mode: {witness_mode}. Custom message: {custom_phrase}. Goal: {goal}")
         if not duration:
-            print("Error: Duration cannot be None.")
+            logging.error("Error: Duration cannot be None.")
             sys.exit(1)
 
         timer_instance = Timer(duration, goal=goal)
@@ -128,13 +139,13 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
         log_event("Timer ended.")
 
         if args.g:
-            print("Sorry, GUI mode is not available in this version.")
+            logging.error("GUI mode is not available in this version.")
             sys.exit(1)
         else:
             user_exited = run_cli_timer(timer_instance)
             if user_exited:
                 log_event("Timer exited by user.")
-                print("Exiting the timer...")
+                logging.info("Exiting the timer...")
                 sys.exit(0)
             on_timer_end(timer_instance, witness_mode,
                          config, custom_phrase, use_gui=False)
@@ -145,7 +156,7 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
 
 
 def main() -> None:
-    print(ASCII_LOGO)
+    logging.info(ASCII_LOGO)
     args = parse_arguments()
     config = load_config()
 
@@ -161,7 +172,10 @@ def main() -> None:
             print(
                 "Please provide a duration as a number or one of the preset flags (-x, -s, -m, -l, -X, -t).")
             sys.exit(1)
-        goal = input("Enter your goal (or leave empty): ").strip() or None
+        try:
+            goal = input("Enter your goal (or leave empty): ").strip() or None
+        except Exception as e:
+            logging.error(f"Error reading goal input: {e}"); goal = None
     else:
         duration = None
         goal = None
