@@ -34,11 +34,8 @@ def load_config(config_path: str = "config.json") -> Dict[str, Any]:
         Dict[str, Any]: Configuration dictionary.
     """
     if not os.path.exists(config_path):
-    if not os.path.exists(config_path):
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(DEFAULT_CONFIG, f, indent=4)
-        return DEFAULT_CONFIG.copy()
-    else:
-        with open(config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        return config
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+    return config
