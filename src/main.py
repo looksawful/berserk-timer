@@ -163,7 +163,7 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("Welcome to Berserk Timer - Stay Focused, Stay Productive!")
     print("=" * 60 + "\n")
-    
+
     args = parse_arguments()
     config = load_config()
 
@@ -173,7 +173,7 @@ def main() -> None:
 
     interactive_mode = not any(
         [args.duration, args.x, args.s, args.m, args.l, args.X, args.t])
-    
+
     if not interactive_mode:
         duration = calculate_duration(args, config)
         if not duration:
@@ -196,7 +196,7 @@ def main() -> None:
                 break
             except ValueError:
                 print("Invalid input. Please enter a numeric value.")
-    
+
     # Always ask for goal before first timer start
     try:
         goal = input("\nWhat are you planning to do? (or press Enter to skip): ").strip() or None

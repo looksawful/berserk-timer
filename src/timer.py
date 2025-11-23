@@ -51,7 +51,7 @@ class Timer:
 
     def resume(self) -> None:
         self._paused = False
-    
+
     def is_paused(self) -> bool:
         return self._paused
 
