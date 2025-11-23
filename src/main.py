@@ -158,7 +158,12 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
 
 
 def main() -> None:
-    logging.info(ASCII_LOGO)
+    # Display logo at startup
+    print(ASCII_LOGO)
+    print("\n" + "=" * 60)
+    print("Welcome to Berserk Timer - Stay Focused, Stay Productive!")
+    print("=" * 60 + "\n")
+    
     args = parse_arguments()
     config = load_config()
 
@@ -168,18 +173,37 @@ def main() -> None:
 
     interactive_mode = not any(
         [args.duration, args.x, args.s, args.m, args.l, args.X, args.t])
+    
     if not interactive_mode:
         duration = calculate_duration(args, config)
         if not duration:
             print(
                 "Please provide a duration as a number or one of the preset flags (-x, -s, -m, -l, -X, -t).")
             sys.exit(1)
-        try:
-            goal = input("Enter your goal (or leave empty): ").strip() or None
-        except Exception as e:
-            logging.error(f"Error reading goal input: {e}"); goal = None
     else:
-        duration = None
+        # Interactive mode: ask for duration
+        while True:
+            try:
+                duration_input = input("\nEnter timer duration in minutes (or press Enter for default 25): ").strip()
+                if not duration_input:
+                    duration = 25 * 60  # Default 25 minutes
+                    break
+                duration_minutes = float(duration_input)
+                if duration_minutes <= 0:
+                    print("Duration must be positive. Please try again.")
+                    continue
+                duration = duration_minutes * 60
+                break
+            except ValueError:
+                print("Invalid input. Please enter a numeric value.")
+    
+    # Always ask for goal before first timer start
+    try:
+        goal = input("\nWhat are you planning to do? (or press Enter to skip): ").strip() or None
+        if goal:
+            print(f"\n✓ Goal set: {goal}")
+    except Exception as e:
+        logging.error(f"Error reading goal input: {e}")
         goal = None
 
     set_mute(args.mute)

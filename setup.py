@@ -38,24 +38,8 @@ def install_requirements():
     print("Dependencies installed.")
 
 
-def check_commit():
-    """Automatically commit any uncommitted changes."""
-    print("Checking for uncommitted changes...")
-    result = subprocess.run(["git", "status", "--porcelain"],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if result.stdout:
-        print("Uncommitted changes found. Committing changes automatically.")
-        subprocess.check_call(["git", "add", "."])
-        subprocess.check_call(
-            ["git", "commit", "-m", "Auto commit before running setup"])
-        subprocess.check_call(["git", "push"])
-        print("Changes committed and pushed.")
-    else:
-        print("No uncommitted changes found.")
-
-
 def main():
-    check_commit()
+    """Main setup function: check/create venv and install dependencies."""
     check_and_create_venv()
     activate_venv()
     install_requirements()

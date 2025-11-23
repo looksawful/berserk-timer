@@ -49,13 +49,13 @@ def run_cli_timer(timer) -> bool:
     exit_flag = False
     suspend_display = threading.Event()
 
-    def pause_action() -> None:
-        timer.pause()
-        console.print("[yellow]Timer paused. Press 'r' to resume.[/yellow]")
-
-    def resume_action() -> None:
-        timer.resume()
-        console.print("[green]Timer resumed.[/green]")
+    def toggle_pause_action() -> None:
+        if timer.is_paused():
+            timer.resume()
+            console.print("[green]Timer resumed.[/green]")
+        else:
+            timer.pause()
+            console.print("[yellow]Timer paused. Press 'p' again to resume.[/yellow]")
 
     def stop_action() -> None:
         nonlocal exit_flag
@@ -108,8 +108,7 @@ def run_cli_timer(timer) -> bool:
             suspend_display.clear()
 
     commands: Dict[str, Callable[[], None]] = {
-        'p': pause_action,
-        'r': resume_action,
+        'p': toggle_pause_action,
         'q': stop_action,
         'z': zero_action,
         'n': restart_action,
@@ -134,7 +133,7 @@ def run_cli_timer(timer) -> bool:
                         break
                 else:
                     console.print(
-                        "\n[red]Unknown command. Press (p, r, q, z, n, v, d, u, g, m) only.[/red]")
+                        "\n[red]Unknown command. Press (p, q, z, n, v, d, u, g, m) only.[/red]")
             time.sleep(0.1)
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
@@ -142,7 +141,7 @@ def run_cli_timer(timer) -> bool:
     while timer.is_running() and not exit_flag:
         if not suspend_display.is_set():
             width = shutil.get_terminal_size().columns
-            msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause, r: resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal, m: silent mode)"
+            msg = f"Time remaining: {timer.get_remaining_time_str()}  (p: pause/resume, q: quit, z: zero, n: restart, v: view log, d: delete logs, u: update duration, g: set goal, m: silent mode)"
             logging.info(msg.ljust(width))
         time.sleep(0.1)
     console.print()

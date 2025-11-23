@@ -24,16 +24,20 @@
 > - ✅ Fixed: Premature "Timer ended" logging
 > - 🚧 In Progress: Mute/Silent mode CLI flags
 
-- [Berserk Timer 0.1.3-beta](#berserk-timer-013-beta)
-  - [Features](#features)
-  - [Recent Bugfixes](#recent-bugfixes)
-  - [Installing on Windows](#installing-on-windows)
-    - [Optional](#optional)
-  - [Running](#running)
-    - [Windows](#windows)
-    - [Linux](#linux)
-    - [MacOS](#macos)
-  - [Development](#development)
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+  - [Quick Install (Windows)](#quick-install-windows)
+  - [Quick Install (Linux/MacOS)](#quick-install-linuxmacos)
+  - [Optional: Windows Shortcuts](#optional-windows-shortcuts)
+- [Usage](#usage)
+  - [Basic Usage](#basic-usage)
+  - [CLI Commands](#cli-commands)
+  - [Command-Line Flags](#command-line-flags)
+- [Recent Bugfixes](#recent-bugfixes)
+- [Development](#development)
+- [License](#license)
 
 Berserk Timer – a CLI timer with witness mode, and flexible duration input.
 The goal was to create a simple Windows CLI timer that asks you what you have been doing for the last session. I couldn't find any free tool for Windows that suits my needs: flexibility, simplicity and no-adds in one. That's why I decided to create Berserk Timer. It helps me managing my time a lot so I decided to share it.
@@ -65,51 +69,158 @@ I hope this tool will make it easier for others to track time and stay productiv
   - Main log – `logs/berserk.log`
   - Witness mode responses – `logs/witness_log_YYYY-MM-DD.txt`
 
-## Installing on Windows
+## Installation
 
-1. Install `git` from `https://git-scm.com/download/win`
-2. Open a terminal to the folder you want Berserk in and run
-`git clone https://github.com/looksawful/BerserkTimer`
-3. Then `cd` into folder and run `brsrk-cli.bat` for cli, or `brsrk-gui.bat` for gui
+### Prerequisites
 
-### Optional
+- Python 3.10 or higher
+- pip (Python package manager)
 
-_You may want to add a shortcut to run brsrk from Windows Taskbar, but it's impossible to use .bat scripts like that, so while there is no normal installer I personally prefer this trick:_
-4. Create an empty shortcut in the berserk-timer directory or anywhere you like it and force rename it to `.exe`
-5. After renaming in file properties add In the properties of the shortcut add `C:\Windows\System32\cmd.exe /c C:\Users\awful\Documents\Code\berserk-timer\brsrk.bat`
-5. Add an icon from `.\berserk-timer\assets\icon.ico`
+### Quick Install (Windows)
 
-## Running
+1. **Clone the repository:**
+   ```cmd
+   git clone https://github.com/looksawful/berserk-timer.git
+   cd berserk-timer
+   ```
 
-### Windows
+2. **Install dependencies:**
+   ```cmd
+   pip install -r requirements.txt
+   ```
 
-From the berserk-timer directory, run:
+3. **Create your config file:**
+   ```cmd
+   copy config.example.json config.json
+   ```
+   Then edit `config.json` to customize your presets and messages.
 
-- Example: 1.5 minutes (i.e., 1 minute 30 seconds):
+4. **Run the timer:**
+   ```cmd
+   python -m src.main 25
+   ```
 
-  ```cmd
-  python -m src.main 1.5
-  ```
+### Quick Install (Linux/MacOS)
 
-### Linux
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/looksawful/berserk-timer.git
+   cd berserk-timer
+   ```
 
-From the berserk-timer directory, run:
+2. **Install dependencies:**
+   ```bash
+   pip3 install -r requirements.txt
+   ```
 
-- Example: 1.5 minutes (i.e., 1 minute 30 seconds):
+3. **Create your config file:**
+   ```bash
+   cp config.example.json config.json
+   ```
+   Then edit `config.json` to customize your presets and messages.
 
-  ```bash
-  python3 -m src.main 1.5
-  ```
+4. **Run the timer:**
+   ```bash
+   python3 -m src.main 25
+   ```
 
-### MacOS
+### Optional: Windows Shortcuts
 
-From the berserk-timer directory, run:
+For quick access from anywhere, you can use the provided batch files:
 
-- Example: 1.5 minutes (i.e., 1 minute 30 seconds):
+```cmd
+# Run from anywhere after adding berserk-timer to PATH
+brsrk.bat 25
+```
 
-  ```bash
-  python3 -m src.main 1.5
-  ```
+Or create a shortcut:
+1. Right-click `brsrk.bat` → Create Shortcut
+2. Move shortcut to Desktop or Pin to Taskbar
+3. (Optional) Change icon using `assets/icon.ico` if available
+
+## Usage
+
+### Basic Usage
+
+**Start a timer (in minutes):**
+
+```cmd
+# 25 minutes (Pomodoro)
+python -m src.main 25
+
+# 1.5 minutes (1 minute 30 seconds)
+python -m src.main 1.5
+```
+
+**Use presets:**
+
+```cmd
+# Extra Small (5 min)
+python -m src.main -x
+
+# Small (10 min)
+python -m src.main -s
+
+# Medium (15 min)
+python -m src.main -m
+
+# Large (20 min)
+python -m src.main -l
+
+# Extra Large (25 min)
+python -m src.main -X
+
+# Test preset (1 min)
+python -m src.main -t
+```
+
+**Enable witness mode:**
+
+```cmd
+# Timer with witness mode
+python -m src.main -w 25
+
+# Witness mode asks "What were you doing?" after timer ends
+# Type your activity or use safe word (default: "skip") to cancel
+```
+
+**Silent mode:**
+
+```cmd
+# Start timer without sound
+python -m src.main --mute 25
+
+# Toggle sound during timer with 'm' key
+```
+
+### CLI Commands
+
+During timer execution, press:
+
+- `p` - Pause/Resume timer (toggle)
+- `n` - Restart timer from beginning
+- `q` - Quit timer
+- `z` - Zero timer (set to 0 and stop)
+- `v` - View today's witness log
+- `d` - Delete all logs
+- `u` - Update timer duration
+- `g` - Set/update goal
+- `m` - Toggle silent mode
+
+### Command-Line Flags
+
+| Flag | Description |
+|------|-------------|
+| `-w, --witness` | Enable witness mode (asks what you did after timer) |
+| `-g, --gui` | Launch GUI mode (experimental) |
+| `-x, --xs` | Extra Small preset (5 min) |
+| `-s, --small` | Small preset (10 min) |
+| `-m, --medium` | Medium preset (15 min) |
+| `-l, --large` | Large preset (20 min) |
+| `-X, --xl` | Extra Large preset (25 min) |
+| `-t, --test` | Test preset (1 min) |
+| `--seconds` | Interpret duration as seconds instead of minutes |
+| `--mute` | Start timer in silent mode |
 
 ## Recent Bugfixes
 
@@ -143,26 +254,91 @@ From the berserk-timer directory, run:
 
 ## Development
 
-**Tech Stack:** Python 3.10+, Rich (CLI), Pygame (audio), pytest (testing)
+### Tech Stack
 
-**Running Tests:**
+- **Python:** 3.10+
+- **CLI Framework:** Rich (beautiful terminal UI)
+- **Audio:** Pygame (sound notifications)
+- **Testing:** pytest + pytest-cov
+- **Configuration:** JSON-based
 
-``bash
-pytest tests/ -v --cov=src
-``
+### Setup Development Environment
 
-**Contributing:**
+1. **Clone and install:**
+
+   ```bash
+   git clone https://github.com/looksawful/berserk-timer.git
+   cd berserk-timer
+   pip install -r requirements.txt
+   ```
+
+2. **Run tests:**
+
+   ```bash
+   # Run all tests with verbose output
+   pytest tests/ -v
+
+   # Run with coverage report
+   pytest tests/ --cov=src --cov-report=html
+
+   # Open coverage report
+   # Windows: start htmlcov/index.html
+   # Linux: xdg-open htmlcov/index.html
+   ```
+
+3. **Project structure:**
+
+   ```
+   berserk-timer/
+   ├── src/              # Source code
+   │   ├── main.py       # Entry point
+   │   ├── timer.py      # Timer logic
+   │   ├── cli.py        # CLI interface
+   │   ├── config_manager.py
+   │   ├── logger.py
+   │   └── witness.py
+   ├── tests/            # Test suite
+   ├── logs/             # Activity logs (gitignored)
+   ├── config.json       # User config (gitignored)
+   ├── config.example.json
+   └── README.md
+   ```
+
+### Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Run tests before committing
-4. Submit a pull request
+3. Make your changes
+4. Run tests: `pytest tests/ -v`
+5. Update CHANGELOG.md
+6. Commit: `git commit -m "feat: description"`
+7. Push: `git push origin feature/your-feature`
+8. Submit a pull request
 
-**Roadmap:**
+### Commit Message Convention
 
-- [ ] Add `--mute` and `--silent` CLI flags
-- [ ] Improve GUI interface (experimental)
-- [ ] Add configurable audio files
-- [ ] Export witness logs to CSV/JSON
+- `feat:` - New feature
+- `fix:` - Bug fix
+- `docs:` - Documentation changes
+- `test:` - Test additions/changes
+- `refactor:` - Code refactoring
+- `chore:` - Build/config changes
 
-For detailed development tasks, see `TODO/berserk-timer-TODO.md` in the project root.
+### Roadmap
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and planned features.
+
+**Upcoming:**
+- [ ] Unified `--mute` / `--silent` CLI handling
+- [ ] CSV/JSON export for witness logs
+- [ ] Configurable audio files
+- [ ] Improved GUI (currently experimental)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+**Created by [looksawful](https://github.com/looksawful)**
+**Repository:** https://github.com/looksawful/berserk-timer

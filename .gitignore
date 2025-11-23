@@ -3,34 +3,51 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.swp
+*.so
+*.egg
+*.egg-info/
 
-#Personal notes
+# Personal notes
 todos/
+INTERNALS.md
 
-#Manual configuration
+# User configuration and data
 config.json
+logs/
+*.log
 
-#shortcut 
+# Shortcuts
 brsrk.exe
+*.lnk
 
 # Virtual environment directories
 venv/
 .env/
 env/
-
-# Logs
-logs/
-*.log
+ENV/
 
 # OS-specific files
 .DS_Store
 Thumbs.db
+desktop.ini
+*.pkf
+*.swp
 
 # Build artifacts
 dist/
 build/
+*.spec
 
 # IDE settings
 .vscode/
 .idea/
+*.sublime-*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Distribution
+*.whl
