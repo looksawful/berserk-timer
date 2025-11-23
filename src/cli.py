@@ -47,7 +47,6 @@ def run_cli_timer(timer) -> bool:
         bool: True if the user exited the timer, False otherwise.
     """
     exit_flag = False
-    exit_flag = False
     suspend_display = threading.Event()
 
     def pause_action() -> None:

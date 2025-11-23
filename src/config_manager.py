@@ -20,9 +20,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "m": 15,
         "l": 20,
         "xl": 25,
-        "test": 0.1
+        "test": 1  # test preset: 1 minute
     },
     "witness_mode": True,
+    "safe_word": "skip"
 }
 
 
@@ -38,4 +39,10 @@ def load_config(config_path: str = "config.json") -> Dict[str, Any]:
             json.dump(DEFAULT_CONFIG, f, indent=4)
     with open(config_path, "r", encoding="utf-8") as f:
         config = json.load(f)
+    # Sanitize messages: remove empty or whitespace-only entries
+    if "messages" in config and isinstance(config["messages"], list):
+        config["messages"] = [m for m in config["messages"] if isinstance(m, str) and m.strip()]
+    # Ensure safe_word present
+    if "safe_word" not in config:
+        config["safe_word"] = DEFAULT_CONFIG.get("safe_word", "skip")
     return config

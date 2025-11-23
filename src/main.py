@@ -136,7 +136,6 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
 
         timer_instance = Timer(duration, goal=goal)
         timer_instance.start()
-        log_event("Timer ended.")
 
         if args.g:
             logging.error("GUI mode is not available in this version.")
@@ -147,6 +146,9 @@ def run_timer_loop(args: argparse.Namespace, config: dict, duration: Optional[fl
                 log_event("Timer exited by user.")
                 logging.info("Exiting the timer...")
                 sys.exit(0)
+            # Only log natural completion once timer thread has finished
+            if timer_instance.get_remaining_time() == 0:
+                log_event("Timer ended.")
             on_timer_end(timer_instance, witness_mode,
                          config, custom_phrase, use_gui=False)
             restart_choice = input("Restart timer? (y/n): ").lower().strip()

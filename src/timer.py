@@ -1,6 +1,7 @@
 """Module timer.py: Implements a Timer class for the Berserk Timer application."""
 import time
 import threading
+import logging
 from typing import Optional
 from .logger import log_event
 
@@ -15,7 +16,6 @@ class Timer:
         Returns:
             None
         """
-        self.duration = duration
         self.duration = duration
         self.remaining = duration
         self._paused = False

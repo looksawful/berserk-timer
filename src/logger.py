@@ -25,7 +25,6 @@ def log_event(message: str) -> None:
         None
     """
     logging.info(message)
-    logging.info(message)
 
 
 def log_witness_response(response: str) -> None:
