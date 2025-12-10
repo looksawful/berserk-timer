@@ -2,96 +2,31 @@
 
 All notable changes to Berserk Timer will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Planned
-- Export witness logs to CSV/JSON
-- Configurable audio files
-- Improved GUI interface
-
-## [0.1.4-beta] - 2025-11-23
-
-### Added
-- ASCII logo display on startup
-- Interactive startup mode: asks for duration and goal before timer starts
-- `is_paused()` method in Timer class
-
-### Changed
-- **Simplified hotkeys:** Combined `p` (pause) and `r` (resume) into single `p` key for toggle pause/resume
-- Hotkey descriptions updated: `z` now correctly described as "zero timer", `n` as "restart", `u` as "update duration"
-- Logo and welcome message now shown before any timer initialization
-- Interactive mode improved with better prompts and default values
-
-### Removed
-- Separate `r` hotkey for resume (merged with `p`)
+## [0.2.1-beta] - 2025-12-10
 
 ### Fixed
-- Duplicate `*.pyd` entry in .gitignore removed
-- Cleaner .gitignore with better organization
-
-## [0.1.3-beta] - 2025-11-23
-
-### Added
-- `safe_word` configuration option with default value "skip"
-- Message sanitization on config load (removes empty strings)
-- Test coverage for config validation and sanitization
-- `config.example.json` as template for user configuration
+- `x` now opens the witness prompt instead of quitting; alert stops repeating after `k`.
+- True silent start when using `--mute` or `volume: 0`.
+- Logging no longer crashes in read-only environments (falls back to stderr).
 
 ### Changed
-- Test preset duration changed from 0.1 minutes (6 seconds) to 1 minute
-- Improved config loading with fallback for missing safe_word
-
-### Fixed
-- "Timer ended" log now only appears when timer completes naturally
-- Empty messages no longer saved to witness logs
-- Config validation ensures safe_word is always present
-
-### Modified Files
-- `src/config_manager.py` - Config defaults and validation
-- `src/main.py` - Timer end logging fix
-- `tests/test_config.py` - New test cases
-- `.gitignore` - Extended to cover more Python artifacts
-
-## [0.1.2-beta] - 2025-02-XX
-
-### Added
-- Witness mode functionality
-- Activity logging system
-- CLI interactive commands during timer execution
-
-### Changed
-- Improved Rich CLI interface with better visual feedback
-
-## [0.1.1-beta] - 2025-01-XX
-
-### Added
-- Basic timer functionality
-- Preset durations (xs, s, m, l, xl)
-- Sound notifications using Pygame
-- Configuration file support
-
-### Fixed
-- Various CLI display issues
-- Timer accuracy improvements
-
-## [0.1.0-alpha] - 2024-XX-XX
-
-### Added
-- Initial release
-- Basic CLI timer
-- Duration input in minutes
-- Simple logging
+- Restart after completion now resets duration; `start()` works again post-finish.
+- Volume range normalized to 0-10 with global mute override.
+- Small UI polish (signature and log viewer ASCII art).
 
 ---
 
-## Legend
+## [0.2.0-beta] - 2025-12-09
 
-- **Added** - New features
-- **Changed** - Changes in existing functionality
-- **Deprecated** - Soon-to-be removed features
-- **Removed** - Removed features
-- **Fixed** - Bug fixes
-- **Security** - Security fixes
+### Highlights
+- New threaded core with drift compensation and event bus for responsive controls.
+- Witness Mode asks for activity notes and logs to `logs/witness_log_YYYY-MM-DD.txt`.
+- Volume control with multiple alert sounds (`alert1-5.wav`), mute toggle, and on-the-fly restart/zero.
+- Configurable presets via `config.json`; compact/`NO_COLOR` support for narrow or monochrome terminals.
+- Graceful shutdown (Ctrl+C stops audio cleanly).
+
+---
+
+## [0.1.0-alpha] - 2024
+
+- First prototype: basic countdown and logging.

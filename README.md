@@ -1,4 +1,4 @@
-# Berserk Timer 0.1.3-beta
+# Berserk Timer 0.2.1-beta
 
 ```plaintext
 ███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
@@ -14,331 +14,164 @@
         █    ██  █   █  ██▄▄    █▀▀█▌
        █     ▐█      █  █▄   ▄▀ █   █
       ▀       ▐     ▀   ▀███▀      █
+
 ```
 
-> **Status:** 🔧 Active Development | **Priority:** 🔥 Critical
-> **Recent Updates (Nov 23, 2025):**
-> - ✅ Fixed: Added `safe_word` to config defaults
-> - ✅ Fixed: Test preset changed from 0.1 to 1 minute
-> - ✅ Fixed: Message sanitization (removes empty strings)
-> - ✅ Fixed: Premature "Timer ended" logging
-> - 🚧 In Progress: Mute/Silent mode CLI flags
+_Logo generated via the TAAG Text to ASCII Art Generator (edge font); the CLI uses your terminal's monospace font._
 
-## Table of Contents
+## Berserk Timer - a CLI timer with witness mode, and flexible duration input
 
-- [Features](#features)
-- [Installation](#installation)
-  - [Quick Install (Windows)](#quick-install-windows)
-  - [Quick Install (Linux/MacOS)](#quick-install-linuxmacos)
-  - [Optional: Windows Shortcuts](#optional-windows-shortcuts)
-- [Usage](#usage)
-  - [Basic Usage](#basic-usage)
-  - [CLI Commands](#cli-commands)
-  - [Command-Line Flags](#command-line-flags)
-- [Recent Bugfixes](#recent-bugfixes)
-- [Development](#development)
-- [License](#license)
+I needed a simple Windows CLI timer that asks "What have you been doing?" after each session. I couldn't find any free tool that combined flexibility, simplicity, and a no-ads policy. So I decided to create Berserk Timer. It helps me manage my time a lot, so I decided to share it.
 
-Berserk Timer – a CLI timer with witness mode, and flexible duration input.
-The goal was to create a simple Windows CLI timer that asks you what you have been doing for the last session. I couldn't find any free tool for Windows that suits my needs: flexibility, simplicity and no-adds in one. That's why I decided to create Berserk Timer. It helps me managing my time a lot so I decided to share it.
+### ⚠️ Compatibility Note (Please Read)
 
-The tool provides:
+This project is currently in active development (**Beta**).
 
-- **CLI support**.
-- **Customizable timers** with presets, and _witness_ mode.
-- **Easy logging** for your activities.
-- **Quick access** via the `brsrk` command, which can be used from any directory.
+- ✅ **Windows:** Fully ready and tested. This is the primary platform.
+- ❓ **Linux & MacOS:** **Untested and likely not working.** Since I primarily use Windows, I haven't been able to adapt the audio and system notifications for Unix-based systems yet. I am open to any suggestions, fixes, or Pull Requests to get Linux and Mac versions running!
 
-I hope this tool will make it easier for others to track time and stay productive. Enjoy Berserk Timer and feel free to contribute!
+> Engine note: the runtime currently uses the `Timer` class; `TimerCore` remains experimental and is not wired into the CLI yet.
 
-## Features
+### What's New in 0.2.1?
 
-- **Flexible Duration Input:**
-  - By default, the duration is entered in minutes (either whole or fractional, e.g., `1.5` means 1 minute 30 seconds).
-  - The `--seconds` flag allows you to input the duration in seconds.
-- **Presets:**
-  Use the flags `-x`, `-s`, `-m`, `-l`, `-X`, or `-t` to select predefined durations (in minutes). You can add the presets into `config.json`
-- **Witness Mode:**
-  After the timer finishes (whether it was paused, quit, or stopped in another way), the user will be asked the question "What were you doing?" – you can enter text in any language (or type the safe word from config to cancel, default: `skip`) and in the end of the week there are a list of your activities for each day and hour.
-- **Silent Mode:**
-  The timer can be launched in mute mode (using the `--mute` flag), and during a running timer you can toggle silent mode on/off with the `m` command. In silent mode, the end-of-timer melody will not play. _(Note: CLI flags `--mute` and `--silent` are planned for upcoming release)_
-- **Interfaces:**
-  Both CLI and GUI modes are supported, but I personally prefer to use CLI whenever it is possible, so GUI is still very experimental and rude. Use the `-g` flag to start the graphical interface for your own risk.
-- **Logging:**
-  All events are recorded in the `logs` folder:
-  - Main log – `logs/berserk.log`
-  - Witness mode responses – `logs/witness_log_YYYY-MM-DD.txt`
+- Fixed `x` key to open the witness prompt (and stop repeating alert after `k`).
+- True silent start when using `--mute` or `volume: 0`; logging falls back to stderr on read-only FS.
+- Restart after completion now resets duration; volume range normalized to 0–10 with global mute override.
 
-## Installation
+### What's New in 0.2.0?
 
-### Prerequisites
+I completely rewrote the internal engine (`TimerCore`).
 
-- Python 3.10 or higher
-- pip (Python package manager)
+- **Drift Compensation:** The timer now runs on a dedicated thread with precise time correction.
+- **Responsive UI:** Separated the logic from the interface. Commands like Pause/Resume happen instantly.
+- **Volume Control:** You can now set volume (0-10), not just mute/unmute.
 
-### Quick Install (Windows)
+### Features
 
-1. **Clone the repository:**
-   ```cmd
-   git clone https://github.com/looksawful/berserk-timer.git
-   cd berserk-timer
+1. **Flexible Duration Input:**
+   - Type `1.5` for 1 minute 30 seconds.
+   - Use `--seconds` flag to just type seconds.
+2. **Witness Mode:**
+   - After the timer finishes (or is stopped), it asks: _"What were you doing?"_
+   - You can enter text in any language or type `skip`.
+   - Logs are saved so you can review your week later.
+3. **Presets:**
+   - Quickly start timers using flags like `-s` (short), `-m` (medium), `-l` (long).
+   - Fully customizable via `config.json`.
+4. **Control & Audio:**
+   - **Silent Mode:** Launch with `--mute`, set `volume: 0` in `config.json`, or toggle with `m` key.
+   - **Volume:** Configurable volume levels 0-10 for the alert sound; global mute overrides per-timer volume until disabled.
+   - Audio playback currently uses pygame (listed in requirements).
+   - **Hotkeys:** Pause, Resume, or Restart on the fly.
+5. **Logging:**
+   - System log: `logs/berserk.log`
+   - Activity log: `logs/witness_log_YYYY-MM-DD.txt`
+   - Read-only environments fall back to stderr; witness logs will not be written if the filesystem is not writable.
+
+### Installation (Windows)
+
+1. **Clone the Repo:** Open your terminal in the desired folder and run:
+
+   ```bash
+   git clone https://github.com/looksawful/BerserkTimer
    ```
 
-2. **Install dependencies:**
-   ```cmd
+2. **Dependencies:** Make sure you have Python installed. Then install requirements:
+
+   ```bash
+   cd BerserkTimer
    pip install -r requirements.txt
    ```
 
-3. **Create your config file:**
-   ```cmd
-   copy config.example.json config.json
-   ```
-   Then edit `config.json` to customize your presets and messages.
+   _(If `requirements.txt` doesn't exist yet, standard Python libs should suffice for now)._
 
-4. **Run the timer:**
-   ```cmd
-   python -m src.main 25
-   ```
+3. **Run:** simple run `brsrk-cli.bat`.
 
-### Quick Install (Linux/MacOS)
+#### Optional: Create a Shortcut
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/looksawful/berserk-timer.git
-   cd berserk-timer
-   ```
+Since `.bat` files can't be pinned easily to the Taskbar, I use this trick to make it look like a native app:
 
-2. **Install dependencies:**
-   ```bash
-   pip3 install -r requirements.txt
-   ```
+1. Create a standard shortcut to `brsrk-cli.bat` (Right click -> Create shortcut).
+2. Right-click the shortcut -> **Properties**.
+3. In the **Target** field, change it to use `cmd.exe`. It should look like this:
+   C:\Windows\System32\cmd.exe /c "C:\Users\YourName\Path\To\BerserkTimer\brsrk-cli.bat"
 
-3. **Create your config file:**
-   ```bash
-   cp config.example.json config.json
-   ```
-   Then edit `config.json` to customize your presets and messages.
+4. Click **Change Icon** and select `assets/icon.ico` from the project folder.
+5. Now you can pin it to the Taskbar!
 
-4. **Run the timer:**
-   ```bash
-   python3 -m src.main 25
-   ```
+### Configuration & Presets
 
-### Optional: Windows Shortcuts
+You can customize the timer by editing `config.json` in the root folder.
 
-For quick access from anywhere, you can use the provided batch files:
+**Default Presets:**
 
-```cmd
-# Run from anywhere after adding berserk-timer to PATH
-brsrk.bat 25
+- `-x`: Extra short (Pomodoro break?)
+- `-s`: Short
+- `-m`: Medium
+- `-l`: Long
+- `-t`: Test
+
+**Example config.json:**
+
+```json
+{
+  "presets": {
+    "x": 5,
+    "s": 15,
+    "m": 25,
+    "l": 45
+  },
+  "default_volume": 5,
+  "sound_file": "alert1.wav"
+}
 ```
 
-Or create a shortcut:
-1. Right-click `brsrk.bat` → Create Shortcut
-2. Move shortcut to Desktop or Pin to Taskbar
-3. (Optional) Change icon using `assets/icon.ico` if available
+### Usage & Commands
 
-## Usage
+**Starting the timer:**
 
-### Basic Usage
+```bash
+# Standard run (duration in minutes)
+python -m src.main 10
 
-**Start a timer (in minutes):**
-
-```cmd
-# 25 minutes (Pomodoro)
-python -m src.main 25
-
-# 1.5 minutes (1 minute 30 seconds)
+# Fractional minutes (1 min 30 sec)
 python -m src.main 1.5
-```
 
-**Use presets:**
-
-```cmd
-# Extra Small (5 min)
-python -m src.main -x
-
-# Small (10 min)
+# Using a preset (e.g., Short)
 python -m src.main -s
 
-# Medium (15 min)
-python -m src.main -m
-
-# Large (20 min)
-python -m src.main -l
-
-# Extra Large (25 min)
-python -m src.main -X
-
-# Test preset (1 min)
-python -m src.main -t
+# Start in silent mode
+python -m src.main 25 --mute
 ```
 
-**Enable witness mode:**
+**While the timer is running:**
 
-```cmd
-# Timer with witness mode
-python -m src.main -w 25
+The new Core listens to key events (depending on your UI implementation):
 
-# Witness mode asks "What were you doing?" after timer ends
-# Type your activity or use safe word (default: "skip") to cancel
+- `p` or `Space`: **Pause/Resume**
+- `r`: **Restart** timer from the beginning
+- `m`: Toggle **Mute** (Silent mode)
+- `s` or `Esc`: **Stop** timer (Triggers Witness Mode)
+- `z`: **Zero** out timer (Ends immediately)
+
+### For Linux Users (Experimental)
+
+As stated, this might not work out of the box. Yyou can try:
+
+```bash
+python3 -m src.main 1.5
 ```
 
-**Silent mode:**
+If you encounter audio errors, please check if you have the necessary system libraries for `playsound` or whichever audio lib is being used. Contributions are welcome!
 
-```cmd
-# Start timer without sound
-python -m src.main --mute 25
-
-# Toggle sound during timer with 'm' key
-```
-
-### CLI Commands
-
-During timer execution, press:
-
-- `p` - Pause/Resume timer (toggle)
-- `n` - Restart timer from beginning
-- `q` - Quit timer
-- `z` - Zero timer (set to 0 and stop)
-- `v` - View today's witness log
-- `d` - Delete all logs
-- `u` - Update timer duration
-- `g` - Set/update goal
-- `m` - Toggle silent mode
-
-### Command-Line Flags
-
-| Flag | Description |
-|------|-------------|
-| `-w, --witness` | Enable witness mode (asks what you did after timer) |
-| `-g, --gui` | Launch GUI mode (experimental) |
-| `-x, --xs` | Extra Small preset (5 min) |
-| `-s, --small` | Small preset (10 min) |
-| `-m, --medium` | Medium preset (15 min) |
-| `-l, --large` | Large preset (20 min) |
-| `-X, --xl` | Extra Large preset (25 min) |
-| `-t, --test` | Test preset (1 min) |
-| `--seconds` | Interpret duration as seconds instead of minutes |
-| `--mute` | Start timer in silent mode |
-
-## Recent Bugfixes
-
-**Version 0.1.3-beta (Nov 23, 2025):**
-
-1. **Added `safe_word` to config defaults**
-   - The witness mode now includes a configurable safe word (default: `"skip"`)
-   - Users can type the safe word instead of answering "What were you doing?"
-   - Fallback ensures safe_word is always present even in old config files
-
-2. **Fixed test preset duration**
-   - Changed from `0.1` minutes (6 seconds) to `1` minute
-   - More realistic test duration for development and debugging
-
-3. **Message sanitization**
-   - Empty strings are now automatically removed from witness mode messages
-   - Prevents blank entries in witness logs
-
-4. **Fixed premature logging**
-   - "Timer ended" log now only appears when timer completes naturally
-   - Previously logged even when user quit early
-
-5. **Test coverage improvements**
-   - Added `test_load_config_sanitizes_messages_and_adds_safe_word()`
-   - Validates config loading, message sanitization, and safe_word presence
-
-**Files Modified:**
-- `src/config_manager.py` - Config defaults and validation
-- `src/main.py` - Timer end logging fix
-- `tests/test_config.py` - New test cases
-
-## Development
-
-### Tech Stack
-
-- **Python:** 3.10+
-- **CLI Framework:** Rich (beautiful terminal UI)
-- **Audio:** Pygame (sound notifications)
-- **Testing:** pytest + pytest-cov
-- **Configuration:** JSON-based
-
-### Setup Development Environment
-
-1. **Clone and install:**
-
-   ```bash
-   git clone https://github.com/looksawful/berserk-timer.git
-   cd berserk-timer
-   pip install -r requirements.txt
-   ```
-
-2. **Run tests:**
-
-   ```bash
-   # Run all tests with verbose output
-   pytest tests/ -v
-
-   # Run with coverage report
-   pytest tests/ --cov=src --cov-report=html
-
-   # Open coverage report
-   # Windows: start htmlcov/index.html
-   # Linux: xdg-open htmlcov/index.html
-   ```
-
-3. **Project structure:**
-
-   ```
-   berserk-timer/
-   ├── src/              # Source code
-   │   ├── main.py       # Entry point
-   │   ├── timer.py      # Timer logic
-   │   ├── cli.py        # CLI interface
-   │   ├── config_manager.py
-   │   ├── logger.py
-   │   └── witness.py
-   ├── tests/            # Test suite
-   ├── logs/             # Activity logs (gitignored)
-   ├── config.json       # User config (gitignored)
-   ├── config.example.json
-   └── README.md
-   ```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes
-4. Run tests: `pytest tests/ -v`
-5. Update CHANGELOG.md
-6. Commit: `git commit -m "feat: description"`
-7. Push: `git push origin feature/your-feature`
-8. Submit a pull request
-
-### Commit Message Convention
-
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation changes
-- `test:` - Test additions/changes
-- `refactor:` - Code refactoring
-- `chore:` - Build/config changes
-
-### Roadmap
-
-See [CHANGELOG.md](CHANGELOG.md) for version history and planned features.
-
-**Upcoming:**
-- [ ] Unified `--mute` / `--silent` CLI handling
-- [ ] CSV/JSON export for witness logs
-- [ ] Configurable audio files
-- [ ] Improved GUI (currently experimental)
+Enjoy Berserk Timer and feel free to contribute!
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+Berserk Timer is provided under a personal/non-commercial license. Highlights:
+- Use and modify for personal, educational, and other non-commercial purposes with attribution.
+- Commercial use, resale, or paid distribution requires my written permission.
+- All alert sounds and other audio assets remain my property; keep them inside Berserk Timer and do not reuse or redistribute them separately.
+- Third-party dependencies keep their own licenses (pygame is LGPL).
 
----
-
-**Created by [looksawful](https://github.com/looksawful)**
-**Repository:** https://github.com/looksawful/berserk-timer
+See [LICENSE](LICENSE) for the full terms.
