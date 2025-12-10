@@ -1,4 +1,5 @@
 """Unit tests for Timer class."""
+
 import unittest
 import time
 from src.timer import Timer

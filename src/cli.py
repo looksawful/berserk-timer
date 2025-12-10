@@ -1,22 +1,54 @@
-"""Module cli.py: CLI interface for the Berserk Timer application."""
-import logging
-import os
-import sys
-import time
-import threading
 import select
 import shutil
-from typing import Callable, Dict, Optional
+import sys
+import threading
+import time
+from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
+
 from rich.console import Console
-from rich.text import Text
-from .logger import view_today_log, delete_today_log, get_available_sounds, play_sound, stop_sound, is_sound_playing
-from .ascii_art import ASCII_SETTINGS, ASCII_HELP, ASCII_BYE
+
+from .ascii_art import ASCII_BYE, ASCII_HELP, ASCII_SETTINGS, ASCII_FINISHED, ASCII_WITNESS_LOG
+from .constants import MAX_TIMER_SECONDS
+from .logger import (
+    delete_today_log,
+    get_available_sounds,
+    is_globally_muted,
+    is_sound_playing,
+    play_sound,
+    stop_sound,
+    view_today_log,
+)
+from .screen_manager import get_screen_manager
+
+if TYPE_CHECKING:
+    from .timer import Timer
 
 console = Console()
 
+MAIN_LOOP_INTERVAL = 0.5
+KEY_POLL_INTERVAL = 0.1
+SOUND_PREVIEW_DURATION = 1.0
+MIN_FULL_HINT_WIDTH = 80
+VOLUME_LOW_THRESHOLD = 3
+VOLUME_MID_THRESHOLD = 6
+VOLUME_HIGH_THRESHOLD = 8
+MAX_VOLUME = 10
+MIN_DURATION_SECONDS = 1
+MAX_DURATION_MINUTES = MAX_TIMER_SECONDS / 60
+
+
+def validate_duration(seconds: float) -> Tuple[bool, str]:
+    if seconds <= 0:
+        return False, "Duration must be positive"
+    if seconds < MIN_DURATION_SECONDS:
+        return False, f"Duration must be at least {MIN_DURATION_SECONDS} second(s)"
+    if seconds > MAX_TIMER_SECONDS:
+        hours = MAX_TIMER_SECONDS // 3600
+        return False, f"Duration cannot exceed {hours} hours"
+    return True, ""
+
 
 def safe_terminal_width(default: int = 80) -> int:
-    """Return current terminal width with fallbacks for Windows shells that glitch during resize."""
     try:
         width = shutil.get_terminal_size().columns
         if width and width > 0:
@@ -27,31 +59,47 @@ def safe_terminal_width(default: int = 80) -> int:
         width = console.size.width
         if width and width > 0:
             return width
-    except Exception:
+    except (OSError, ValueError, AttributeError):
         pass
     return default
 
 
-def clear_console() -> None:
-    """Cross-platform console clear (handles Windows Terminal / PowerShell / Git Bash)."""
-    try:
-        console.clear()
-    except Exception:
-        cmd = "cls" if os.name == "nt" else "clear"
-        os.system(cmd)
-
-
-def clear_status_line(width: int) -> None:
-    """Fully wipe the current status line before rewriting it."""
-    sys.stdout.write("\r" + (" " * max(width, 0)) + "\r")
-    sys.stdout.flush()
-
-
 def build_command_hint(width: int) -> str:
-    """Build command hint string based on terminal width."""
-    full = "[p]ause [q]uit [x]zero [r]estart [v]iew [d]elete [u]pdate [g]oal [m]ute [s]ound [h]elp"
-    compact = "[p][q][x][r][v][d][u][g][m][s][h]"
-    return full if width >= 80 else compact
+    full = "\\[p]ause \\[q]uit \\[x]zero timer \\[r]estart \\[v]iew \\[d]elete \\[u]pdate \\[g]oal \\[m]ute \\[s]ettings \\[h]elp"
+    compact = "p q x r v d u g m s h"
+    return full if width >= MIN_FULL_HINT_WIDTH else compact
+
+
+def redraw_command_hints() -> None:
+    screen = get_screen_manager()
+    screen.clear_screen()
+    width = safe_terminal_width()
+    command_hint = build_command_hint(width)
+    if width < MIN_FULL_HINT_WIDTH:
+        console.print("[dim]Commands:[/dim]")
+        console.print(f"[dim]{command_hint}[/dim]")
+    else:
+        console.print(f"[dim]Commands: {command_hint}[/dim]")
+    console.print()
+
+
+def show_volume_bar(volume: int, is_silent: bool = False) -> str:
+    if is_silent or volume == 0:
+        return "[blue][----------] SILENT[/blue]"
+
+    filled = "#" * volume
+    empty = "-" * (MAX_VOLUME - volume)
+
+    if volume <= VOLUME_LOW_THRESHOLD:
+        color = "blue"
+    elif volume <= VOLUME_MID_THRESHOLD:
+        color = "green"
+    elif volume <= VOLUME_HIGH_THRESHOLD:
+        color = "yellow"
+    else:
+        color = "red"
+
+    return f"[{color}][{filled}{empty}] {volume}/{MAX_VOLUME}[/{color}]"
 
 
 if sys.platform.startswith("win"):
@@ -61,10 +109,14 @@ if sys.platform.startswith("win"):
         return msvcrt.kbhit()
 
     def getch() -> str:
-        return msvcrt.getch().decode("utf-8")
+        try:
+            return msvcrt.getch().decode("utf-8", errors="ignore")
+        except (UnicodeDecodeError, OSError):
+            return ""
+
 else:
-    import tty
     import termios
+    import tty
 
     def kbhit() -> bool:
         dr, _, _ = select.select([sys.stdin], [], [], 0)
@@ -81,38 +133,33 @@ else:
         return ch
 
 
-def run_cli_timer(timer) -> bool:
-    """Runs the command-line timer interface.
-    Args:
-        timer: Timer instance.
-    Returns:
-        bool: True if the user exited the timer, False otherwise.
-    """
-    exit_flag = False
+def run_cli_timer(timer: "Timer") -> bool:
+    exit_flag = threading.Event()
     suspend_display = threading.Event()
-    in_audio_menu = False  # Suppress global hotkeys while inside audio settings
+    in_audio_menu = threading.Event()
+    stop_listener_event = threading.Event()
 
     def toggle_pause_action() -> None:
         suspend_display.set()
         if timer.is_paused():
             timer.resume()
-            console.print("[green]Timer resumed.[/green]")
+            console.print("\n[green]Timer resumed[/green]")
         else:
             timer.pause()
-            console.print("[yellow]Timer paused. Press 'p' again to resume.[/yellow]")
-        width = safe_terminal_width()
-        print(f"Commands: {build_command_hint(width)}")
-        print()
+            console.print("\n[yellow]Timer paused[/yellow]")
         suspend_display.clear()
 
     def stop_action() -> None:
-        nonlocal exit_flag
         suspend_display.set()
         try:
-            confirmation = input("\n[!] Are you sure you want to quit the timer? (y/n): ").lower().strip()
-            if confirmation in ('y', 'yes', 'д', 'да'):
+            confirmation = (
+                input("\n[!] Are you sure you want to quit the timer? (y/n): ")
+                .lower()
+                .strip()
+            )
+            if confirmation in ("y", "yes"):
                 timer.stop()
-                exit_flag = True
+                exit_flag.set()
                 print(ASCII_BYE)
                 console.print("[red]Timer stopped by user.[/red]")
             else:
@@ -123,72 +170,134 @@ def run_cli_timer(timer) -> bool:
     def zero_action() -> None:
         suspend_display.set()
         timer.zero()
-        console.print("[blue]Timer zeroed.[/blue]")
-        print(f"Commands: {build_command_hint(safe_terminal_width())}")
-        print()
+        console.print("\n[cyan]Timer zeroed[/cyan]")
         suspend_display.clear()
 
     def restart_action() -> None:
         suspend_display.set()
         timer.restart()
-        console.print("[cyan]Timer restarted.[/cyan]")
-        print(f"Commands: {build_command_hint(safe_terminal_width())}")
-        print()
+        console.print("\n[green]Timer restarted[/green]")
         suspend_display.clear()
 
     def view_log_action() -> None:
         suspend_display.set()
-        log_content = view_today_log()
-        console.print("[magenta]Today's Witness Log:[/magenta]")
-        console.print(log_content)
-        print(f"Commands: {build_command_hint(safe_terminal_width())}")
-        print()
-        suspend_display.clear()
+        try:
+            screen = get_screen_manager()
+            screen.clear_screen()
+            print(ASCII_WITNESS_LOG)
+            log_content = view_today_log()
+            console.print(log_content)
+            input("\nPress Enter to return to timer...")
+            redraw_command_hints()
+        finally:
+            suspend_display.clear()
 
     def delete_logs_action() -> None:
         suspend_display.set()
-        delete_today_log()
-        console.print("[bold red]Today's log deleted.[/bold red]")
-        print(f"Commands: {build_command_hint(safe_terminal_width())}")
-        print()
-        suspend_display.clear()
+        try:
+            log_content = view_today_log()
+            if log_content == "No log for today.":
+                console.print("\n[yellow]No log for today to delete.[/yellow]")
+                time.sleep(1.5)
+            else:
+                console.print("\n[yellow]Current log preview:[/yellow]")
+                lines = log_content.split("\n")[:5]
+                for line in lines:
+                    console.print(f"  [dim]{line}[/dim]")
+                if len(log_content.split("\n")) > 5:
+                    console.print("  [dim]...[/dim]")
+
+                confirmation = (
+                    input("\n[!] Are you sure you want to delete today's log? (y/n): ")
+                    .lower()
+                    .strip()
+                )
+                if confirmation in ("y", "yes"):
+                    delete_today_log()
+                    console.print("[red]Today's log deleted.[/red]")
+                    time.sleep(1)
+                else:
+                    console.print("[green]Deletion cancelled.[/green]")
+                    time.sleep(1)
+        finally:
+            suspend_display.clear()
 
     def update_duration_action() -> None:
         suspend_display.set()
         try:
-            user_input = input("\nEnter new duration in minutes: ")
-            new_duration = float(user_input) * 60
-            timer.update_duration(new_duration)
+            screen = get_screen_manager()
+            screen.clear_screen()
             console.print(
-                f"[green]Timer duration updated to {new_duration / 60} minutes.[/green]")
+                f"[dim]Current remaining: {timer.get_remaining_time_str()}[/dim]"
+            )
+            console.print(
+                f"[dim]Max duration: {MAX_DURATION_MINUTES:.0f} minutes ({MAX_TIMER_SECONDS // 3600} hours)[/dim]\n"
+            )
+
+            user_input = input("Enter new duration in minutes: ").strip()
+            if not user_input:
+                console.print("[yellow]Cancelled.[/yellow]")
+                time.sleep(1)
+                redraw_command_hints()
+                return
+
+            new_duration_minutes = float(user_input)
+            new_duration_seconds = new_duration_minutes * 60
+
+            is_valid, error_msg = validate_duration(new_duration_seconds)
+            if not is_valid:
+                console.print(f"[red]Error: {error_msg}[/red]")
+                time.sleep(2)
+                redraw_command_hints()
+                return
+
+            timer.update_duration(new_duration_seconds)
+            console.print(
+                f"[green]Duration updated to {new_duration_minutes:.1f} minutes[/green]"
+            )
+            time.sleep(1)
+            redraw_command_hints()
         except ValueError:
-            console.print("[red]Invalid input for duration update.[/red]")
+            console.print("[red]Invalid input. Please enter a number.[/red]")
+            time.sleep(1.5)
+            redraw_command_hints()
         finally:
             suspend_display.clear()
 
-    def set_mute_action():
+    def set_mute_action() -> None:
         suspend_display.set()
-        timer.toggle_silent()  # Toggle silent mode in timer
-        status = "enabled" if timer.is_silent() else "disabled"
-        volume_info = f" Volume set to {timer.get_volume()}." if not timer.is_silent() else ""
-        console.print(f"[yellow]Silent mode {status}.{volume_info}[/yellow]")
-        print(f"Commands: {build_command_hint(safe_terminal_width())}")
-        print()
+        timer.toggle_silent()
+        if timer.is_silent():
+            console.print("\n[blue]Silent mode: ON[/blue]")
+        else:
+            console.print("\n[green]Silent mode: OFF[/green]")
         suspend_display.clear()
 
     def set_goal_action() -> None:
         suspend_display.set()
         try:
-            new_goal = input("\nEnter your goal: ")
-            timer.set_goal(new_goal)
-            console.print(f"[blue]Goal set to: {new_goal}[/blue]")
+            screen = get_screen_manager()
+            screen.clear_screen()
+            current_goal = timer.get_goal()
+            if current_goal:
+                console.print(f"[dim]Current goal: {current_goal}[/dim]\n")
+            new_goal = input("Enter your goal (or press Enter to clear): ").strip()
+            if new_goal:
+                timer.set_goal(new_goal)
+                console.print(f"[green]Goal set: {new_goal}[/green]")
+            else:
+                timer.set_goal(None)
+                console.print("[yellow]Goal cleared.[/yellow]")
+            time.sleep(1)
+            redraw_command_hints()
         finally:
             suspend_display.clear()
 
     def show_help_action() -> None:
-        """Show help screen with ASCII header during timer."""
         suspend_display.set()
         try:
+            screen = get_screen_manager()
+            screen.clear_screen()
             print(ASCII_HELP)
             console.print("\n[bold cyan]TIMER COMMANDS:[/bold cyan]")
             console.print("  [green]p[/green] - Pause/Resume timer")
@@ -200,85 +309,50 @@ def run_cli_timer(timer) -> bool:
             console.print("  [green]u[/green] - Update duration (change timer length)")
             console.print("  [green]g[/green] - Set/change goal for this session")
             console.print("  [green]m[/green] - Toggle silent mode on/off")
-            console.print("  [green]s[/green] - Open audio settings (sound file and volume)")
+            console.print(
+                "  [green]s[/green] - Open audio settings (sound file and volume)"
+            )
             console.print("  [green]h[/green] - Show this help screen")
             console.print("  [green]k[/green] - Stop currently playing sound")
             input("\nPress Enter to return to timer...")
+            redraw_command_hints()
         finally:
             suspend_display.clear()
 
-    def show_volume_bar(volume: int, is_silent: bool = False) -> str:
-        """Generate ASCII volume bar with color gradient.
-        0 = blue (silent), 1-3 = blue, 4-6 = green, 7-8 = yellow, 9-10 = red
-        """
-        if is_silent or volume == 0:
-            return "[blue][----------] SILENT[/blue]"
-
-        filled = "#" * volume
-        empty = "-" * (10 - volume)
-
-        # Color gradient based on volume
-        if volume <= 3:
-            color = "blue"
-        elif volume <= 6:
-            color = "green"
-        elif volume <= 8:
-            color = "yellow"
-        else:
-            color = "red"
-
-        return f"[{color}][{filled}{empty}] {volume}/10[/{color}]"
-
     def change_sound_action() -> None:
         suspend_display.set()
-        nonlocal in_audio_menu
-        in_audio_menu = True
+        in_audio_menu.set()
         try:
             available_sounds = get_available_sounds()
             if not available_sounds:
                 console.print("[red]No sound files found in assets directory![/red]")
                 return
 
-            current_volume = timer.get_volume()
             current_sound = timer.get_sound_file()
-            is_silent = timer.is_silent()
+            current_idx = (
+                available_sounds.index(current_sound)
+                if current_sound in available_sounds
+                else 0
+            )
 
-            # Find current sound index
-            current_idx = available_sounds.index(current_sound) if current_sound in available_sounds else 0
-
-            print(ASCII_SETTINGS)
-            console.print("\n[bold cyan]═══ AUDIO SETTINGS ═══[/bold cyan]")
-            console.print("
-[bold cyan]=== AUDIO SETTINGS ===[/bold cyan]")
-            console.print(f"\n[yellow]Volume:[/yellow] {show_volume_bar(current_volume, is_silent)}{silent_label}")
-            console.print(f"[yellow]Sound:[/yellow]  {current_sound} ({current_idx + 1}/{len(available_sounds)})")
-
-            console.print("\n[cyan]Available sounds:[/cyan]")
-            for idx, sound in enumerate(available_sounds, 1):
-                marker = ">" if sound == current_sound else " "
-                console.print(f"  {marker} {idx}. {sound}")
-
-            console.print("\n[bold]Commands:[/bold]")
-            console.print("  [green]0[/green]       = Toggle silent mode")
-            console.print("  [green]1-10[/green]    = Set volume (1=min, 10=max)")
-            console.print("  [green]>[/green]       = Next sound")
-            console.print("  [green]<[/green]       = Previous sound")
-            console.print("  [green]t[/green]       = Test current settings")
-            console.print("  [green]k[/green]       = Stop playing sound")
-            console.print("  [green]Enter[/green]   = Close menu")
-
-            import select
-            import sys
-
-            def show_menu_header():
-                """Reprint menu header to keep it in place."""
-                console.clear()
+            def show_menu_header() -> None:
+                nonlocal current_idx
+                is_silent = timer.is_silent()
+                silent_label = " [SILENT]" if is_silent else ""
+                screen = get_screen_manager()
+                screen.clear_screen()
                 print(ASCII_SETTINGS)
                 console.print("\n[bold cyan]═══ AUDIO SETTINGS ═══[/bold cyan]")
-                console.print("
-[bold cyan]=== AUDIO SETTINGS ===[/bold cyan]")
-                console.print(f"\n[yellow]Volume:[/yellow] {show_volume_bar(timer.get_volume(), is_silent)}{silent_label}")
-                console.print(f"[yellow]Sound:[/yellow]  {timer.get_sound_file()} ({current_idx + 1}/{len(available_sounds)})")
+                console.print(
+                    f"\n[yellow]Volume:[/yellow] {show_volume_bar(timer.get_volume(), is_silent)}{silent_label}"
+                )
+                console.print(
+                    f"[yellow]Sound:[/yellow]  {timer.get_sound_file()} ({current_idx + 1}/{len(available_sounds)})"
+                )
+                if is_globally_muted():
+                    console.print(
+                        "[red]Global mute is ON; sounds are blocked until you disable mute.[/red]"
+                    )
                 console.print("\n[cyan]Available sounds:[/cyan]")
                 for idx, sound in enumerate(available_sounds, 1):
                     marker = ">" if sound == timer.get_sound_file() else " "
@@ -286,6 +360,7 @@ def run_cli_timer(timer) -> bool:
                 console.print("\n[bold]Commands:[/bold]")
                 console.print("  [green]0[/green]       = Toggle silent mode")
                 console.print("  [green]1-10[/green]    = Set volume (1=min, 10=max)")
+                console.print("  [green]+/-[/green]     = Volume up/down")
                 console.print("  [green]>[/green]       = Next sound")
                 console.print("  [green]<[/green]       = Previous sound")
                 console.print("  [green]t[/green]       = Test current settings")
@@ -300,274 +375,282 @@ def run_cli_timer(timer) -> bool:
                     break
 
                 if not choice:
-                    console.print("[yellow]Settings saved.[/yellow]")
-                    time.sleep(0.5)
                     break
 
-                if choice.lower() == 'k':
+                if choice == "+":
+                    current_vol = timer.get_volume()
+                    if current_vol < MAX_VOLUME:
+                        timer.set_volume(current_vol + 1)
+                        if not timer.is_silent():
+                            play_sound(timer.get_sound_file(), timer.get_volume())
+                            time.sleep(SOUND_PREVIEW_DURATION)
+                    continue
+
+                if choice == "-":
+                    current_vol = timer.get_volume()
+                    if current_vol > 1:
+                        timer.set_volume(current_vol - 1)
+                        if not timer.is_silent():
+                            play_sound(timer.get_sound_file(), timer.get_volume())
+                            time.sleep(SOUND_PREVIEW_DURATION)
+                    continue
+
+                if choice.lower() == "k":
                     if is_sound_playing():
                         stop_sound()
-                        console.print("[yellow]Sound stopped.[/yellow]")
-                    else:
-                        console.print("[yellow]No sound is playing.[/yellow]")
-                    time.sleep(0.8)
                     continue
 
                 if choice.isdigit():
                     num = int(choice)
                     if num == 0:
                         timer.toggle_silent()
-                        is_silent = timer.is_silent()
-                        if is_silent:
+                        if timer.is_silent():
                             stop_sound()
-                        status = "enabled" if is_silent else "disabled"
-                        console.print(f"[yellow]Silent mode {status}.[/yellow]")
-                        time.sleep(0.8)
-                    elif 1 <= num <= 10:
+                    elif 1 <= num <= MAX_VOLUME:
                         timer.set_volume(num)
-                        console.print(f"[green]Volume set to {num}/10[/green]")
-                        play_sound(timer.get_sound_file(), num)
-                        time.sleep(1.0)
-                    else:
-                        console.print("[red]Volume must be between 0 and 10![/red]")
-                        time.sleep(0.8)
+                        if not timer.is_silent():
+                            play_sound(timer.get_sound_file(), num)
+                            time.sleep(SOUND_PREVIEW_DURATION)
                     continue
 
-                if choice == '>':
+                if choice == ">":
                     current_idx = (current_idx + 1) % len(available_sounds)
                     selected_sound = available_sounds[current_idx]
                     timer.set_sound_file(selected_sound)
-                    console.print(f"[green]Sound changed to: {selected_sound}[/green]")
-                    play_sound(selected_sound, timer.get_volume())
-                    time.sleep(1.0)
+                    if not timer.is_silent():
+                        play_sound(selected_sound, timer.get_volume())
+                        time.sleep(SOUND_PREVIEW_DURATION)
                     continue
 
-                if choice == '<':
+                if choice == "<":
                     current_idx = (current_idx - 1) % len(available_sounds)
                     selected_sound = available_sounds[current_idx]
                     timer.set_sound_file(selected_sound)
-                    console.print(f"[green]Sound changed to: {selected_sound}[/green]")
-                    play_sound(selected_sound, timer.get_volume())
-                    time.sleep(1.0)
+                    if not timer.is_silent():
+                        play_sound(selected_sound, timer.get_volume())
+                        time.sleep(SOUND_PREVIEW_DURATION)
                     continue
 
-                if choice.lower() == 't':
-                    if timer.is_silent():
-                        console.print("[yellow]Silent mode is ON - test will not play sound[/yellow]")
-                        time.sleep(0.8)
-                    else:
-                        console.print(f"[cyan]Testing: {timer.get_sound_file()} at volume {timer.get_volume()}/10...[/cyan]")
+                if choice.lower() == "t":
+                    if not timer.is_silent():
                         play_sound(timer.get_sound_file(), timer.get_volume())
-                        time.sleep(1.0)
+                        time.sleep(SOUND_PREVIEW_DURATION)
                     continue
 
-                console.print("[red]Invalid command! Use: 0 (silent), 1-10 (volume), </> (sound), t (test), k (stop), or Enter[/red]")
-                time.sleep(0.8)
+                time.sleep(MAIN_LOOP_INTERVAL)
         finally:
+            redraw_command_hints()
             suspend_display.clear()
-            in_audio_menu = False
+            in_audio_menu.clear()
 
     def stop_sound_action() -> None:
         suspend_display.set()
-        width = safe_terminal_width()
-        print("\r" + " " * width + "\r", end='', flush=True)
         if is_sound_playing():
             stop_sound()
-            console.print("[yellow]Sound stopped.[/yellow]")
-        else:
-            console.print("[yellow]No sound is playing.[/yellow]")
-        # Reprint hints after message
-        print(f"Commands: {build_command_hint(width)}")
-        print()
         suspend_display.clear()
 
     commands: Dict[str, Callable[[], None]] = {
-        'p': toggle_pause_action,
-        'q': stop_action,
-        'x': zero_action,
-        'r': restart_action,
-        'v': view_log_action,
-        'd': delete_logs_action,
-        'u': update_duration_action,
-        'g': set_goal_action,
-        'm': set_mute_action,
-        's': change_sound_action,
-        'k': stop_sound_action,
-        'h': show_help_action
+        "p": toggle_pause_action,
+        "q": stop_action,
+        "x": zero_action,
+        "r": restart_action,
+        "v": view_log_action,
+        "d": delete_logs_action,
+        "u": update_duration_action,
+        "g": set_goal_action,
+        "m": set_mute_action,
+        "s": change_sound_action,
+        "k": stop_sound_action,
+        "h": show_help_action,
     }
 
     def keyboard_listener() -> None:
-        nonlocal exit_flag
-        while timer.is_running() and not exit_flag:
-            if in_audio_menu:
-                # Do not process global hotkeys while audio menu is active
-                time.sleep(0.05)
+        while (
+            timer.is_running()
+            and not exit_flag.is_set()
+            and not stop_listener_event.is_set()
+        ):
+            if in_audio_menu.is_set():
+                time.sleep(KEY_POLL_INTERVAL)
                 continue
             if kbhit():
                 try:
-                    key = getch().lower()
+                    key = getch()
                 except (UnicodeDecodeError, OSError):
                     continue
 
-                # Ignore control characters, escape sequences, and special keys
-                if ord(key) < 32 or ord(key) == 27:  # Control chars and ESC
-                    # Flush any remaining buffered input from paste/click
+                if not key:
+                    continue
+
+                if ord(key[0]) == 27:
                     while kbhit():
                         try:
                             getch()
-                        except:
+                        except (UnicodeDecodeError, OSError):
                             break
                     continue
 
-                if key in commands:
-                    commands[key]()
-                    # Only break if exit_flag was actually set (user confirmed quit)
-                    if key == 'x' or (key == 'q' and exit_flag):
-                        break
-                else:
-                    # For unknown printable keys, flush input buffer to prevent paste spam
-                    while kbhit():
+                if ord(key[0]) == 224:
+                    if kbhit():
                         try:
                             getch()
-                        except:
-                            break
-            time.sleep(0.1)
+                        except (UnicodeDecodeError, OSError):
+                            pass
+                    continue
+
+                if ord(key[0]) < 32:
+                    continue
+
+                key = key.lower()
+                if key in commands:
+                    commands[key]()
+                    if key == "q" and exit_flag.is_set():
+                        break
+            time.sleep(KEY_POLL_INTERVAL)
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
     listener.start()
 
-    last_width = safe_terminal_width()
-    last_render_time = 0.0
+    redraw_command_hints()
+
     last_remaining_str = ""
-    last_status_width = last_width
 
-    while timer.is_running() and not exit_flag:
+    while timer.is_running() and not exit_flag.is_set():
         if not suspend_display.is_set():
-            width = safe_terminal_width()
-
-            # Detect terminal resize and clear screen to remove old wrapped lines
-            if width != last_width:
-                clear_console()
-
-                # Reprint static hint line
-                print(f"Commands: {build_command_hint(width)}")
-                print()  # spacer line for status
-                last_width = width
-                # Force next render
-                last_remaining_str = ""
-                last_render_time = 0.0
-                last_status_width = width
-                # Skip this iteration to let screen settle
-                time.sleep(0.1)
-                continue
-
-            # Throttle updates to ~1Hz and only when time changes
-            now = time.time()
             remaining_str = timer.get_remaining_time_str()
-            if now - last_render_time < 0.9 and remaining_str == last_remaining_str:
-                time.sleep(0.1)
-                continue
-            last_render_time = now
-            last_remaining_str = remaining_str
 
-            silent_marker = "[SILENT] " if timer.is_silent() else ""
-            hints = build_command_hint(width)
+            if remaining_str != last_remaining_str:
+                silent_marker = "[SILENT] " if timer.is_silent() else ""
+                paused_marker = "[PAUSED] " if timer.is_paused() else ""
+                status = f"{silent_marker}{paused_marker}Time: {remaining_str}"
 
-            # Build status line
-            msg = f"{silent_marker}Time: {remaining_str} | {hints}"
+                width = safe_terminal_width()
+                sys.stdout.write(f"\r{' ' * width}\r{status}")
+                sys.stdout.flush()
 
-            # Truncate to width minus margin to prevent wrap
-            safe_width = max(10, width - 1)
-            if len(msg) >= safe_width:
-                msg = msg[:safe_width - 3] + "..."
+                last_remaining_str = remaining_str
 
-            clear_status_line(max(last_status_width, safe_width))
-            sys.stdout.write("\r" + msg.ljust(safe_width))
-            sys.stdout.flush()
-            last_status_width = safe_width
-        time.sleep(0.1)
-    console.print()
-    return exit_flag
+        time.sleep(MAIN_LOOP_INTERVAL)
+
+    print()
+
+    stop_listener_event.set()
+    if listener.is_alive():
+        listener.join(timeout=1.0)
+
+    return exit_flag.is_set()
 
 
-def enter_paused_mode(timer) -> None:
-    """Enter paused timer mode to access settings and logs."""
-    console.print("\n[cyan]═══ PAUSED MODE ═══[/cyan]")
-    console.print("
-[cyan]=== PAUSED MODE ===[/cyan]")
-    console.print("[yellow]Press 'p' to resume, 'q' to exit menu, or use other commands.[/yellow]\n")
+def cli_witness_form(
+    safe_word: str,
+    timer: Optional["Timer"] = None,
+    goal: Optional[str] = None,
+    timer_end_time: Optional[float] = None,
+    logging_mode: str = "witness",
+    duration_minutes: float = 0,
+    stop_repeating_alert: Optional[threading.Event] = None,
+) -> Tuple[str, Optional[float]]:
+    if logging_mode == "disabled":
+        console.print("\n[dim]Logging disabled. Press Enter to continue...[/dim]")
+        input()
+        return ("Logging disabled.", timer_end_time)
 
-    # Ensure timer is running before pausing
-    if not timer.is_running():
-        timer.start()
-    timer.pause()
-
-    run_cli_timer(timer)
-    console.print("\n[cyan]Returning to dialog...[/cyan]\n")
-
-
-def cli_witness_form(safe_word: str, timer=None, goal: Optional[str] = None, timer_end_time: float = None) -> tuple:
-    """Witness form with optional paused mode access.
-    Args:
-        safe_word: Word to skip witness logging
-        timer: Optional timer instance to enter paused mode
-        goal: Optional goal set at timer start; if None, empty input is allowed
-        timer_end_time: Timestamp when timer ended (time.time())
-    Returns:
-        tuple: (response, timer_end_time)
-    """
-    import time
-    import threading
-
-    # Create a flag to stop the repeating alert from within the input thread
     stop_alert_flag = threading.Event()
 
-    def check_for_k_key():
-        """Background thread to check for 'k' key press to stop alert."""
+    def check_for_k_key() -> None:
         while not stop_alert_flag.is_set():
             if kbhit():
                 try:
-                    key = getch().lower()
-                    if key == 'k':
+                    key = getch()
+                    if key and key[0].lower() == "k":
                         console.print("\n[yellow]Sound stopped (pressed 'k')[/yellow]")
                         stop_sound()
+                        if stop_repeating_alert:
+                            stop_repeating_alert.set()
                         stop_alert_flag.set()
                         return
-                except (UnicodeDecodeError, Exception):
+                except (UnicodeDecodeError, OSError):
                     pass
-            time.sleep(0.05)
+            time.sleep(KEY_POLL_INTERVAL)
 
-    # Start background thread to listen for 'k' key
     k_listener = threading.Thread(target=check_for_k_key, daemon=True)
     k_listener.start()
 
+    print(ASCII_FINISHED)
+    console.print("\n[bold cyan]⏰ TIMER FINISHED ⏰[/bold cyan]\n")
+    if timer_end_time:
+        import datetime
+
+        completed_time = datetime.datetime.fromtimestamp(timer_end_time).strftime(
+            "%H:%M:%S"
+        )
+        console.print(f"[yellow]Completed at:[/yellow] {completed_time}")
+    if duration_minutes:
+        console.print(f"[yellow]Duration:[/yellow]     {duration_minutes} minutes")
+    if goal:
+        console.print(f"[yellow]Goal:[/yellow]         {goal}")
+    console.print()
+
     while True:
-        # Show static prompt without elapsed time
-        prompt = f"\nTimer finished. Please enter what you were doing, press Enter to skip"
-        if safe_word:
-            prompt += f", or type '{safe_word}' to cancel"
-        prompt += ", or press 'k' to stop alert): "
+        if logging_mode == "confessor":
+            prompt = "\n[bold red]You MUST describe what you did (cannot skip):[/bold red]\n> "
+        elif logging_mode == "rage":
+            prompt = "\nWhat did you accomplish? (or press Enter to skip, 'k' to stop alert): "
+        else:
+            prompt = "\nWhat did you accomplish? (or press Enter to skip"
+            if safe_word:
+                prompt += f", '{safe_word}' to cancel"
+            prompt += ", 'k' to stop alert): "
 
         try:
             response = input(prompt).strip()
-            # Stop alert and sound when user provides response
             stop_alert_flag.set()
             stop_sound()
+            if stop_repeating_alert:
+                stop_repeating_alert.set()
         except (EOFError, KeyboardInterrupt):
             stop_alert_flag.set()
             stop_sound()
+            if stop_repeating_alert:
+                stop_repeating_alert.set()
             return ("Witness skipped.", timer_end_time)
 
-        if response.lower() == safe_word.lower():
+        if safe_word and response.lower() == safe_word.lower():
+            if stop_repeating_alert:
+                stop_repeating_alert.set()
             return ("Witness skipped.", timer_end_time)
-        if response.lower() == 'k':
+        if response.lower() == "k":
             stop_sound()
+            if stop_repeating_alert:
+                stop_repeating_alert.set()
             console.print("[yellow]Sound stopped.[/yellow]")
-            continue  # Let user try again to enter witness response
+            continue
         if response:
+            if stop_repeating_alert:
+                stop_repeating_alert.set()
             return (response, timer_end_time)
-        # Allow empty response if no goal was set
-        if goal is None:
+
+        if logging_mode == "confessor":
+            console.print(
+                "[red]CONFESSOR mode: Input cannot be empty. You must describe your activity.[/red]"
+            )
+            continue
+        elif logging_mode == "witness":
+            confirmation = (
+                input(
+                    "\n[yellow]Are you sure you want to skip witness? (y/n):[/yellow] "
+                )
+                .strip()
+                .lower()
+            )
+            if confirmation in ("y", "yes"):
+                if stop_repeating_alert:
+                    stop_repeating_alert.set()
+                return ("Witness skipped.", timer_end_time)
+            else:
+                console.print("[cyan]Please provide your witness response:[/cyan]")
+                continue
+        else:
+            if stop_repeating_alert:
+                stop_repeating_alert.set()
             return ("Witness skipped.", timer_end_time)
-        console.print(
-            f"[red]Input cannot be empty. Please provide a description of your activity, or type '{safe_word}' to cancel.[/red]")

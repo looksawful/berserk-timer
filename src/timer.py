@@ -1,21 +1,28 @@
-"""Module timer.py: Implements a Timer class for the Berserk Timer application."""
 import time
 import threading
 import logging
 from typing import Optional
 from .logger import log_event
+from .constants import MAX_TIMER_SECONDS
+
+
+class TimerDurationError(ValueError):
+    pass
 
 
 class Timer:
-    def __init__(self, duration: float, log_without_timer: bool = False, goal: Optional[str] = None) -> None:
-        """Initializes the Timer instance.
-        Args:
-            duration (float): Duration in seconds.
-            log_without_timer (bool): Flag to log data without running timer.
-            goal (Optional[str]): Optional goal associated with the timer.
-        Returns:
-            None
-        """
+    MIN_DURATION = 1
+    MAX_DURATION = MAX_TIMER_SECONDS
+
+    def __init__(
+        self,
+        duration: float,
+        log_without_timer: bool = False,
+        goal: Optional[str] = None,
+        sound_file: str = "alert1.wav",
+        volume: int = 5,
+    ) -> None:
+        self._validate_duration(duration)
         self.duration = duration
         self.remaining = duration
         self._paused = False
@@ -24,9 +31,30 @@ class Timer:
         self._thread = threading.Thread(target=self._run)
         self.log_without_timer = log_without_timer
         self.goal = goal
-        self._silent = False
+        self.sound_file = sound_file
+        self.volume = max(0, min(10, volume))
+        self._silent = self.volume == 0
+        self._previous_volume = self.volume or 5
+        self._zeroed = False
+
+    @classmethod
+    def _validate_duration(cls, duration: float) -> None:
+        if duration <= 0:
+            raise TimerDurationError("Duration must be positive")
+        if duration < cls.MIN_DURATION:
+            raise TimerDurationError(
+                f"Duration must be at least {cls.MIN_DURATION} second(s)"
+            )
+        if duration > cls.MAX_DURATION:
+            hours = cls.MAX_DURATION // 3600
+            raise TimerDurationError(f"Duration cannot exceed {hours} hours")
 
     def start(self) -> None:
+        if not self.is_running():
+            with self._lock:
+                self.remaining = self.duration
+                self._paused = False
+                self._zeroed = False
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._run)
         self._thread.start()
@@ -69,14 +97,22 @@ class Timer:
 
     def get_remaining_time_str(self) -> str:
         remaining = int(self.get_remaining_time())
-        minutes, seconds = divmod(remaining, 60)
+        hours, remainder = divmod(remaining, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        if hours > 0:
+            time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        else:
+            time_str = f"{minutes:02d}:{seconds:02d}"
+
         if self.goal:
-            return f"{minutes:02d}:{seconds:02d} [Goal: {self.goal}]"
-        return f"{minutes:02d}:{seconds:02d}"
+            return f"{time_str} [Goal: {self.goal}]"
+        return time_str
 
     def zero(self) -> None:
         with self._lock:
             self.remaining = 0
+            self._zeroed = True
         self.stop()
 
     def restart(self) -> None:
@@ -89,12 +125,16 @@ class Timer:
         self._thread.start()
 
     def update_duration(self, new_duration: float) -> None:
+        self._validate_duration(new_duration)
         with self._lock:
             self.duration = new_duration
             self.remaining = new_duration
 
-    def set_goal(self, goal: str) -> None:
+    def set_goal(self, goal: Optional[str]) -> None:
         self.goal = goal
+
+    def get_goal(self) -> Optional[str]:
+        return self.goal
 
     def log_data(self, message: str) -> None:
         if self.log_without_timer:
@@ -103,7 +143,40 @@ class Timer:
             logging.error("Timer must be running to log data.")
 
     def toggle_silent(self) -> None:
-        self._silent = not self._silent
+        if not self._silent:
+            if self.volume > 0:
+                self._previous_volume = self.volume
+            self.volume = 0
+            self._silent = True
+        else:
+            restore = self._previous_volume if self._previous_volume > 0 else 5
+            self.volume = max(0, min(10, restore))
+            self._silent = self.volume == 0
 
     def is_silent(self) -> bool:
         return self._silent
+
+    def set_sound_file(self, sound_file: str) -> None:
+        self.sound_file = sound_file
+
+    def get_sound_file(self) -> str:
+        return self.sound_file
+
+    def set_volume(self, volume: int) -> None:
+        volume = max(0, min(10, volume))
+
+        if volume == 0:
+            if self.volume > 0:
+                self._previous_volume = self.volume
+            self._silent = True
+        else:
+            self._silent = False
+            self._previous_volume = volume
+
+        self.volume = volume
+
+    def get_volume(self) -> int:
+        return self.volume
+
+    def was_zeroed(self) -> bool:
+        return self._zeroed
