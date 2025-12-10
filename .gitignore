@@ -1,53 +1,35 @@
-# Python bytecode and caches
+# Bytecode / cache
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-*.so
-*.egg
-*.egg-info/
-
-# Personal notes
-todos/
-INTERNALS.md
-
-# User configuration and data
-config.json
-logs/
-*.log
-
-# Shortcuts
-brsrk.exe
-*.lnk
-
-# Virtual environment directories
-venv/
-.env/
-env/
-ENV/
-
-# OS-specific files
-.DS_Store
-Thumbs.db
-desktop.ini
-*.pkf
-*.swp
-
-# Build artifacts
-dist/
-build/
-*.spec
-
-# IDE settings
-.vscode/
-.idea/
-*.sublime-*
-
-# Testing
 .pytest_cache/
-.coverage
-htmlcov/
-.tox/
 
-# Distribution
-*.whl
+# Virtual env
+venv/
+.venv/
+v/
+
+# Logs
+logs/
+
+# Node
+electron-app/node_modules/
+
+# OS
+.DS_Store
+
+# Archives / history
+.archives/
+archive
+.assets(old)/
+.history/
+.documentation/
+claude/
+.claude/
+.FIXES
+FIXES.md
+
+# AI / temp files
+*.pkf
+
+# OS files
+desktop.ini
