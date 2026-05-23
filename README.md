@@ -73,13 +73,13 @@ I completely rewrote the internal engine (`TimerCore`).
 1. **Clone the Repo:** Open your terminal in the desired folder and run:
 
    ```bash
-   git clone https://github.com/looksawful/BerserkTimer
+   git clone https://github.com/looksawful/berserk-timer
    ```
 
 2. **Dependencies:** Make sure you have Python installed. Then install requirements:
 
    ```bash
-   cd BerserkTimer
+   cd berserk-timer
    pip install -r requirements.txt
    ```
 
