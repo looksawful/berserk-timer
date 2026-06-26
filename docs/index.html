@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <title>Berserk Timer</title>
+    <meta content="CLI timer with witness mode and flexible duration input." name="description" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <style>
+      :root{--page:min(100% - 40px,760px);--black:#000;--white:#fff;--muted:rgba(0,0,0,.58);--fill:#f6f8fa;--line:1px solid #000;--line-soft:1px solid rgba(0,0,0,.12);--radius:12px;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+      *,*::before,*::after{box-sizing:border-box}html{background:var(--white);color:var(--black);font-family:"Rubik",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-size-adjust:100%}body{margin:0;min-width:320px;background:var(--white)}a{color:inherit;text-decoration-thickness:1px;text-underline-offset:.18em}h1,h2,p,ul,pre{margin:0}ul{padding-left:1.1rem}li{margin:.32rem 0}svg{width:16px;height:16px;flex:0 0 auto;fill:currentColor}code{font-family:var(--mono)}.page{width:var(--page);margin:0 auto;padding:clamp(48px,8vw,84px) 0}.doc{display:grid;gap:clamp(26px,4.6vw,44px)}.intro{display:grid;gap:17px}h1{max-width:12ch;font-size:clamp(42px,7vw,68px);line-height:.99;letter-spacing:-.052em;font-weight:700}h2{font-size:clamp(20px,2.8vw,26px);line-height:1.1;letter-spacing:-.032em;font-weight:700}p,li{font-size:16px;line-height:1.58}.lead{max-width:620px;font-size:clamp(18px,2.3vw,21px);line-height:1.42}.links{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}.links a{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:6px 10px 7px;border:var(--line);border-radius:999px;color:var(--black);font-size:13px;line-height:1;text-decoration:none}.links a:hover,.links a:focus-visible{background:var(--black);color:var(--white);outline:0}.block{display:grid;gap:14px}.block>p{color:var(--muted)}.code{position:relative;overflow:hidden;border:var(--line-soft);border-radius:var(--radius);background:var(--fill)}.code pre{overflow:auto;padding:42px 16px 16px;background:var(--fill);font-family:var(--mono);font-size:13px;line-height:1.62;white-space:pre}.code code{font-family:inherit}.copy{position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:4px 8px 5px;border:var(--line-soft);border-radius:999px;background:var(--white);color:var(--black);font-family:var(--mono);font-size:11px;line-height:1;cursor:pointer}.copy svg{width:13px;height:13px}.copy:hover,.copy:focus-visible,.copy.is-copied{background:var(--black);color:var(--white);outline:0}.footer{display:grid;gap:14px;padding-top:clamp(22px,4vw,34px);border-top:var(--line-soft);color:var(--muted)}.footer p{font-size:13px;line-height:1.45}.footer .links a{border-color:rgba(0,0,0,.24);color:var(--black)}@media(max-width:560px){:root{--page:min(100% - 32px,760px)}.page{padding-top:36px}h1{font-size:clamp(40px,17vw,60px)}.links{gap:6px}.links a{min-height:30px;padding-inline:9px}.code pre{font-size:12px}}
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <article class="doc">
+        <section class="intro" aria-labelledby="title">
+          <h1 id="title">Berserk Timer</h1>
+          <p class="lead">CLI timer with witness mode and flexible duration input.</p>
+          <ul class="links" aria-label="Primary project links"><li><a href="https://github.com/looksawful/berserk-timer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.25.49-2.72-1.08-2.72-1.08-.36-.93-.9-1.18-.9-1.18-.73-.5.06-.49.06-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.8-.2-3.69-.9-3.69-3.99 0-.88.31-1.6.83-2.16-.08-.2-.36-1.02.08-2.13 0 0 .68-.22 2.22.82A7.7 7.7 0 0 1 8 3.84c.69 0 1.38.09 2.02.27 1.54-1.04 2.22-.82 2.22-.82.44 1.11.16 1.93.08 2.13.52.56.83 1.28.83 2.16 0 3.1-1.89 3.79-3.69 3.99.29.25.55.74.55 1.5v2.22c0 .21.14.46.55.38A8 8 0 0 0 8 0Z"/></svg><span>GitHub</span></a></li></ul>
+        </section>
+        <section class="block"><ul><li>Windows-first beta CLI timer</li><li>Flexible duration input and presets</li><li>Witness mode asks what you were doing after a session</li><li>Pause, resume, restart, mute, stop and zero-out controls</li><li>System and activity logs for later review</li></ul></section>
+        <section class="block" aria-labelledby="install"><h2 id="install">Install</h2><ul class="links" aria-label="Install links"><li><a href="https://github.com/looksawful/berserk-timer/archive/refs/heads/dev.zip"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7.47 10.78a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 0 0-1.06-1.06L8.75 8.44V1.75a.75.75 0 0 0-1.5 0v6.69L5.28 6.47a.75.75 0 0 0-1.06 1.06l3.25 3.25ZM3.75 13a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5Z"/></svg><span>Download ZIP</span></a></li></ul><div class="code"><button class="copy" type="button" data-copy-target="install-code" aria-label="Copy code">copy</button><pre><code id="install-code">git clone https://github.com/looksawful/berserk-timer
+cd berserk-timer
+pip install -r requirements.txt</code></pre></div></section>
+        <section class="block" aria-labelledby="usage"><h2 id="usage">Usage</h2><p>Start a timer with a duration, a fractional duration, a preset or silent mode.</p><div class="code"><button class="copy" type="button" data-copy-target="usage-code" aria-label="Copy code">copy</button><pre><code id="usage-code">python -m src.main 10
+python -m src.main 1.5
+python -m src.main -s
+python -m src.main 25 --mute
+
+p or Space    pause / resume
+r             restart
+m             mute
+s or Esc      stop
+z             zero out</code></pre></div></section>
+        <footer class="footer"><ul class="links" aria-label="Secondary project links"><li><a href="https://github.com/looksawful/berserk-timer/blob/dev/README.md">README</a></li><li><a href="https://github.com/looksawful/berserk-timer/blob/dev/LICENSE">License</a></li><li><a href="https://github.com/looksawful">@looksawful</a></li><li><a href="https://looksawful.ru">looksawful.ru</a></li></ul><p>Personal and non-commercial use with attribution. Commercial use, resale or paid distribution requires written permission.</p></footer>
+      </article>
+    </main>
+    <script>document.querySelectorAll("[data-copy-target]").forEach((button)=>{button.addEventListener("click",async()=>{const target=document.getElementById(button.dataset.copyTarget);if(!target)return;try{await navigator.clipboard.writeText(target.textContent.trim());button.classList.add("is-copied");const oldText=button.textContent;button.textContent="copied";window.setTimeout(()=>{button.classList.remove("is-copied");button.textContent=oldText},1000)}catch{const range=document.createRange();range.selectNodeContents(target);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range)}})});</script>
+  </body>
+</html>
