@@ -9,164 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-:root {
-  color-scheme: dark;
-  --bg: #050505;
-  --panel: #0b0d0c;
-  --panel-2: #101312;
-  --text: #e8e3d4;
-  --muted: rgba(232,227,212,.58);
-  --line: rgba(232,227,212,.18);
-  --accent: #b6ff6d;
-  --accent-soft: rgba(182,255,109,.16);
-  --page: min(100% - 40px, 860px);
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  --sans: "Rubik", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-* { box-sizing: border-box; }
-html { background: var(--bg); color: var(--text); font-family: var(--sans); text-size-adjust: 100%; }
-body {
-  margin: 0;
-  min-width: 320px;
-  background:
-    radial-gradient(circle at 14% 0%, rgba(182,255,109,.08), transparent 30rem),
-    linear-gradient(180deg, #060606 0%, #030303 100%);
-}
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0, rgba(255,255,255,.03) 1px, transparent 1px, transparent 4px);
-  opacity: .22;
-}
-h1,h2,p,ul,pre { margin: 0; }
-ul { padding-left: 1.1rem; }
-li { margin: .34rem 0; font-size: 16px; line-height: 1.58; }
-a { color: inherit; }
-pre, code, .logo, .prompt, .term-bar, .copy { font-family: var(--mono); }
-.page { width: var(--page); margin: 0 auto; padding: clamp(20px, 6vw, 76px) 0; }
-.terminal {
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: rgba(5,7,6,.88);
-  box-shadow: 0 30px 120px rgba(0,0,0,.58);
-}
-.chrome {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 42px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 12px;
-}
-.dots { display: inline-flex; gap: 7px; }
-.dots span { width: 9px; height: 9px; border: 1px solid var(--line); border-radius: 50%; }
-.content { display: grid; gap: clamp(28px, 5vw, 46px); padding: clamp(18px, 5vw, 48px); }
-.intro { display: grid; gap: 18px; }
-.logo {
-  overflow-x: auto;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #020302;
-  color: var(--accent);
-  font-size: clamp(8px, 1.45vw, 14px);
-  line-height: 1.08;
-  letter-spacing: -.02em;
-  text-shadow: 0 0 18px rgba(182,255,109,.24);
-}
-.prompt { color: var(--accent); font-size: 13px; }
-.prompt::before { content: "> "; }
-h1 {
-  max-width: 12ch;
-  font-size: clamp(40px, 7vw, 70px);
-  line-height: .98;
-  letter-spacing: -.055em;
-}
-h2 { font-size: clamp(20px, 2.8vw, 26px); line-height: 1.1; letter-spacing: -.035em; }
-.lead { max-width: 620px; color: var(--muted); font-size: clamp(18px, 2.3vw, 21px); line-height: 1.46; }
-.links { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }
-.links a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 6px 10px 7px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(255,255,255,.02);
-  color: var(--text);
-  font-size: 13px;
-  line-height: 1;
-  text-decoration: none;
-}
-.links a:hover, .links a:focus-visible { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); outline: 0; }
-.block { display: grid; gap: 14px; }
-.block > p { color: var(--muted); font-size: 16px; line-height: 1.58; }
-.features li::marker { color: var(--accent); }
-.term-block { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #030403; }
-.term-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  min-height: 36px;
-  padding: 0 8px 0 13px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 12px;
-}
-.term-block pre { overflow: auto; padding: 16px; color: var(--text); font-size: 13px; line-height: 1.62; white-space: pre; }
-.copy {
-  min-height: 24px;
-  padding: 4px 8px 5px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #050605;
-  color: var(--muted);
-  font-size: 11px;
-  cursor: pointer;
-}
-.copy:hover, .copy:focus-visible, .copy.is-copied { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); outline: 0; }
-.footer {
-  display: grid;
-  gap: 14px;
-  padding-top: clamp(22px, 4vw, 34px);
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-}
-.footer p { font-size: 13px; line-height: 1.45; }
-.footer .links a { color: var(--muted); }
-@media (max-width: 560px) {
-  :root { --page: min(100% - 24px, 860px); }
-  .page { padding-block: 16px; }
-  .terminal { border-radius: 14px; }
-  .content { padding: 18px; }
-  h1 { font-size: clamp(38px, 16vw, 58px); }
-  .logo { margin-inline: -4px; font-size: 8px; }
-  .links { gap: 6px; }
-  .links a { min-height: 30px; padding-inline: 9px; }
-  .term-block pre { font-size: 12px; }
-}
+:root{color-scheme:dark;--bg:#050505;--panel:#0b0d0c;--panel2:#101312;--text:#e8e3d4;--muted:rgba(232,227,212,.58);--line:rgba(232,227,212,.18);--accent:#b6ff6d;--accentSoft:rgba(182,255,109,.16);--page:min(100% - 40px,900px);--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;--sans:"Rubik",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}html{background:var(--bg);color:var(--text);font-family:var(--sans);text-size-adjust:100%}body{margin:0;min-width:320px;background:radial-gradient(circle at 14% 0%,rgba(182,255,109,.08),transparent 30rem),linear-gradient(180deg,#060606 0%,#030303 100%)}body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 4px);opacity:.22}h1,h2,p,ul,pre{margin:0}ul{padding-left:1.1rem}li{margin:.34rem 0;font-size:16px;line-height:1.58}a{color:inherit}pre,code,.logo,.prompt,.termbar,.copy,.player,.screen{font-family:var(--mono)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.page{width:var(--page);margin:0 auto;padding:clamp(20px,6vw,76px) 0}.terminal{overflow:hidden;border:1px solid var(--line);border-radius:18px;background:rgba(5,7,6,.88);box-shadow:0 30px 120px rgba(0,0,0,.58)}.chrome{display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel2);color:var(--muted);font-family:var(--mono);font-size:12px}.dots{display:inline-flex;gap:7px}.dots span{width:9px;height:9px;border:1px solid var(--line);border-radius:50%}.content{display:grid;gap:clamp(28px,5vw,46px);padding:clamp(18px,5vw,48px)}.intro{display:grid;gap:18px}.logo{overflow-x:auto;padding:14px;border:1px solid var(--line);border-radius:14px;background:#020302;color:var(--accent);font-size:clamp(8px,1.35vw,14px);line-height:1.08;letter-spacing:-.02em;text-shadow:0 0 18px rgba(182,255,109,.24)}.prompt{color:var(--accent);font-size:13px}.prompt:before{content:"> "}.lead{max-width:620px;color:var(--muted);font-size:clamp(18px,2.3vw,21px);line-height:1.46}h2{font-size:clamp(20px,2.8vw,26px);line-height:1.1;letter-spacing:-.035em}.links{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}.links a{display:inline-flex;align-items:center;min-height:32px;padding:6px 10px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02);color:var(--text);font-size:13px;line-height:1;text-decoration:none}.links a:hover,.links a:focus-visible{border-color:var(--accent);background:var(--accentSoft);color:var(--accent);outline:0}.block{display:grid;gap:14px}.block>p{color:var(--muted);font-size:16px;line-height:1.58}.features li::marker{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.screen,.player,.term{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#030403}.screen pre,.player pre{overflow:auto;padding:14px;color:var(--text);font-size:12px;line-height:1.45;white-space:pre}.playerhead,.termbar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:38px;padding:0 13px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:12px}.controls{display:flex;gap:7px}.btn{display:inline-grid;place-items:center;width:24px;height:24px;border:1px solid var(--line);border-radius:999px;color:var(--accent)}.meter{display:grid;gap:8px;padding:14px}.wave{overflow:hidden;color:var(--accent);font-size:12px;line-height:1;white-space:nowrap;text-shadow:0 0 14px rgba(182,255,109,.2)}.progress{height:6px;overflow:hidden;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03)}.progress span{display:block;width:42%;height:100%;background:var(--accent);box-shadow:0 0 18px rgba(182,255,109,.34)}.term pre{overflow:auto;padding:16px;color:var(--text);font-size:13px;line-height:1.62;white-space:pre}.copy{min-height:24px;padding:4px 8px 5px;border:1px solid var(--line);border-radius:999px;background:#050605;color:var(--muted);font-size:11px;cursor:pointer}.copy:hover,.copy:focus-visible,.copy.is-copied{border-color:var(--accent);background:var(--accentSoft);color:var(--accent);outline:0}.footer{display:grid;gap:14px;padding-top:clamp(22px,4vw,34px);border-top:1px solid var(--line);color:var(--muted)}.footer p{font-size:13px;line-height:1.45}.footer .links a{color:var(--muted)}@media(max-width:820px){.grid{grid-template-columns:1fr}}@media(max-width:560px){:root{--page:min(100% - 24px,900px)}.page{padding-block:16px}.terminal{border-radius:14px}.content{padding:18px}.logo{margin-inline:-4px;font-size:8px}.links{gap:6px}.links a{min-height:30px;padding-inline:9px}.term pre,.screen pre,.player pre{font-size:12px}}
 </style>
 </head>
 <body>
-<main class="page">
-  <article class="terminal">
-    <div class="chrome" aria-hidden="true">
-      <span class="dots"><span></span><span></span><span></span></span>
-      <span>berserk-timer.exe</span>
-    </div>
-
-    <div class="content">
-      <section class="intro" aria-labelledby="title">
-        <pre class="logo" aria-label="Berserk Timer ASCII logo">███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
+<main class="page"><article class="terminal"><div class="chrome" aria-hidden="true"><span class="dots"><span></span><span></span><span></span></span><span>berserk-timer.exe</span></div><div class="content">
+<section class="intro" aria-labelledby="title"><pre class="logo" aria-label="Berserk Timer ASCII logo">███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
 █  █  █▀   ▀  █  ▄▀  █     ▀▄ █▀   ▀  █  ▄▀ █▄█
 █ ▀ ▄ ██▄▄    █▀▀▌ ▄  ▀▀▀▀▄   ██▄▄    █▀▀▌  █▀▄
 █  ▄▀ █▄   ▄▀ █  █  ▀▄▄▄▄▀    █▄   ▄▀ █  █  █  █
@@ -178,44 +26,45 @@ h2 { font-size: clamp(20px, 2.8vw, 26px); line-height: 1.1; letter-spacing: -.03
     ▀▀▀ █    ██  █ ▀ █  █▀   ▀  █  ▄▀
         █    ██  █   █  ██▄▄    █▀▀█▌
        █     ▐█      █  █▄   ▄▀ █   █
-      ▀       ▐     ▀   ▀███▀      █</pre>
-        <p class="prompt">run berserk timer</p>
-        <h1 id="title">Berserk Timer</h1>
-        <p class="lead">CLI timer with witness mode and flexible duration input.</p>
-        <ul class="links" aria-label="Primary project links">
-          <li><a href="https://github.com/looksawful/berserk-timer">GitHub</a></li>
-        </ul>
-      </section>
-
-      <section class="block">
-        <ul class="features">
-          <li>Windows-first beta CLI timer</li>
-          <li>Flexible duration input and presets</li>
-          <li>Witness mode asks what you were doing after a session</li>
-          <li>Pause, resume, restart, mute, stop and zero-out controls</li>
-          <li>System and activity logs for later review</li>
-        </ul>
-      </section>
-
-      <section class="block" aria-labelledby="install">
-        <h2 id="install">Install</h2>
-        <ul class="links" aria-label="Install links">
-          <li><a href="https://github.com/looksawful/berserk-timer/archive/refs/heads/dev.zip">Download ZIP</a></li>
-        </ul>
-        <div class="term-block">
-  <div class="term-bar"><span>~/berserk-timer</span><button type="button" class="copy" data-copy-target="install-code">copy</button></div>
-  <pre><code id="install-code">git clone https://github.com/looksawful/berserk-timer
+      ▀       ▐     ▀   ▀███▀      █</pre><p class="prompt">run berserk timer</p><h1 id="title" class="sr-only">Berserk Timer</h1><p class="lead">CLI timer with witness mode and flexible duration input.</p><ul class="links" aria-label="Primary project links"><li><a href="https://github.com/looksawful/berserk-timer">GitHub</a></li></ul></section>
+<section class="block"><ul class="features"><li>Windows-first beta CLI timer</li><li>Flexible duration input and presets</li><li>Witness mode asks what you were doing after a session</li><li>Pause, resume, restart, mute, stop and zero-out controls</li><li>System and activity logs for later review</li></ul></section>
+<section class="block" aria-labelledby="melody"><h2 id="melody">Alert melody</h2><div class="player" aria-label="Melody playback interface preview"><div class="playerhead"><span>assets/alert1.wav</span><span class="controls" aria-hidden="true"><span class="btn">▶</span><span class="btn">Ⅱ</span><span class="btn">■</span></span></div><div class="meter"><div class="wave">▁▂▃▆█▆▃▂▁▂▅▇▅▂▁▃▆█▇▃▂▁▁▂▃▆█▆▃▂▁</div><div class="progress"><span></span></div><pre>┌─ alert melody ─────────────────────────────┐
+│ status   playing                           │
+│ file     assets/alert1.wav                 │
+│ volume   5 / 10                            │
+│ mute     off                               │
+│                                            │
+│ 00:03    ▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░   00:12   │
+│          ♪  ♪     ♪ ♪   ♪      ♪           │
+└────────────────────────────────────────────┘</pre></div></div></section>
+<section class="block" aria-labelledby="screens"><h2 id="screens">Screens</h2><div class="grid"><div class="screen"><pre>┌─ timer ────────────────────────────────────┐
+│ preset   medium                            │
+│ left     24:12                             │
+│ state    running                           │
+│                                            │
+│ [p] pause/resume   [r] restart             │
+│ [m] mute           [s] stop                │
+│ [z] zero out                               │
+└────────────────────────────────────────────┘</pre></div><div class="screen"><pre>┌─ alert melody ─────────────────────────────┐
+│ status   playing                           │
+│ file     assets/alert1.wav                 │
+│ volume   5 / 10                            │
+│ mute     off                               │
+│                                            │
+│ 00:03    ▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░   00:12   │
+│          ♪  ♪     ♪ ♪   ♪      ♪           │
+└────────────────────────────────────────────┘</pre></div><div class="screen"><pre>┌─ witness mode ─────────────────────────────┐
+│ timer finished                             │
+│                                            │
+│ what were you doing?                       │
+│ > writing docs and cleaning the project    │
+│                                            │
+│ saved to logs/witness_log_YYYY-MM-DD.txt   │
+└────────────────────────────────────────────┘</pre></div></div></section>
+<section class="block" aria-labelledby="install"><h2 id="install">Install</h2><ul class="links" aria-label="Install links"><li><a href="https://github.com/looksawful/berserk-timer/archive/refs/heads/dev.zip">Download ZIP</a></li></ul><div class="term"><div class="termbar"><span>~/berserk-timer</span><button type="button" class="copy" data-copy-target="install-code">copy</button></div><pre><code id="install-code">git clone https://github.com/looksawful/berserk-timer
 cd berserk-timer
-pip install -r requirements.txt</code></pre>
-</div>
-      </section>
-
-      <section class="block" aria-labelledby="usage">
-        <h2 id="usage">Usage</h2>
-        <p>Start a timer with a duration, a fractional duration, a preset or silent mode.</p>
-        <div class="term-block">
-  <div class="term-bar"><span>~/berserk-timer</span><button type="button" class="copy" data-copy-target="usage-code">copy</button></div>
-  <pre><code id="usage-code">python -m src.main 10
+pip install -r requirements.txt</code></pre></div></section>
+<section class="block" aria-labelledby="usage"><h2 id="usage">Usage</h2><p>Start a timer with a duration, a fractional duration, a preset or silent mode.</p><div class="term"><div class="termbar"><span>~/berserk-timer</span><button type="button" class="copy" data-copy-target="usage-code">copy</button></div><pre><code id="usage-code">python -m src.main 10
 python -m src.main 1.5
 python -m src.main -s
 python -m src.main 25 --mute
@@ -224,46 +73,8 @@ p or Space    pause / resume
 r             restart
 m             mute
 s or Esc      stop
-z             zero out</code></pre>
-</div>
-      </section>
-
-      <footer class="footer">
-        <ul class="links" aria-label="Secondary project links">
-          <li><a href="https://github.com/looksawful/berserk-timer/blob/dev/README.md">README</a></li>
-          <li><a href="https://github.com/looksawful/berserk-timer/blob/dev/LICENSE">License</a></li>
-          <li><a href="https://github.com/looksawful">@looksawful</a></li>
-          <li><a href="https://looksawful.ru">looksawful.ru</a></li>
-        </ul>
-        <p>Personal and non-commercial use with attribution. Commercial use, resale or paid distribution requires written permission.</p>
-      </footer>
-    </div>
-  </article>
-</main>
-
-<script>
-document.querySelectorAll("[data-copy-target]").forEach((button) => {
-  button.addEventListener("click", async () => {
-    const target = document.getElementById(button.dataset.copyTarget);
-    if (!target) return;
-    try {
-      await navigator.clipboard.writeText(target.textContent.trim());
-      const oldText = button.textContent;
-      button.classList.add("is-copied");
-      button.textContent = "copied";
-      window.setTimeout(() => {
-        button.classList.remove("is-copied");
-        button.textContent = oldText;
-      }, 1000);
-    } catch {
-      const range = document.createRange();
-      range.selectNodeContents(target);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  });
-});
-</script>
+z             zero out</code></pre></div></section>
+<footer class="footer"><ul class="links" aria-label="Secondary project links"><li><a href="https://github.com/looksawful/berserk-timer/blob/dev/README.md">README</a></li><li><a href="https://github.com/looksawful/berserk-timer/blob/dev/LICENSE">License</a></li><li><a href="https://github.com/looksawful">@looksawful</a></li><li><a href="https://looksawful.ru">looksawful.ru</a></li></ul><p>Personal and non-commercial use with attribution. Commercial use, resale or paid distribution requires written permission.</p></footer>
+</div></article></main><script>document.querySelectorAll("[data-copy-target]").forEach((button)=>{button.addEventListener("click",async()=>{const target=document.getElementById(button.dataset.copyTarget);if(!target)return;try{await navigator.clipboard.writeText(target.textContent.trim());const oldText=button.textContent;button.classList.add("is-copied");button.textContent="copied";window.setTimeout(()=>{button.classList.remove("is-copied");button.textContent=oldText},1000)}catch{const range=document.createRange();range.selectNodeContents(target);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range)}})});</script>
 </body>
 </html>
