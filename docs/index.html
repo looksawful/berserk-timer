@@ -1,24 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang='en'>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>Berserk Timer</title>
-<meta name="description" content="CLI timer with witness mode and flexible duration input." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<meta name='description' content='CLI timer with witness mode and flexible duration input.'>
 <style>
-:root{color-scheme:dark;--bg:#050505;--panel:#0b0d0c;--panel2:#101312;--text:#e8e3d4;--muted:rgba(232,227,212,.58);--line:rgba(232,227,212,.18);--accent:#b6ff6d;--soft:rgba(182,255,109,.16);--page:min(100% - 40px,980px);--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;--sans:"Rubik",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}html{background:var(--bg);color:var(--text);font-family:var(--sans);text-size-adjust:100%}body{margin:0;min-width:320px;background:radial-gradient(circle at 14% 0%,rgba(182,255,109,.08),transparent 30rem),linear-gradient(180deg,#060606 0%,#030303)}body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 4px);opacity:.22}h1,h2,p,ul,pre{margin:0}ul{padding-left:1.1rem}li{margin:.34rem 0;font-size:16px;line-height:1.58}a{color:inherit}pre,code,.prompt,.bar,.copy{font-family:var(--mono)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.page{width:var(--page);margin:0 auto;padding:clamp(20px,6vw,76px) 0}.terminal{overflow:hidden;border:1px solid var(--line);border-radius:18px;background:rgba(5,7,6,.88);box-shadow:0 30px 120px rgba(0,0,0,.58)}.chrome{display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel2);color:var(--muted);font-family:var(--mono);font-size:12px}.dots{display:inline-flex;gap:7px}.dots span{width:9px;height:9px;border:1px solid var(--line);border-radius:50%}.content{display:grid;gap:clamp(28px,5vw,46px);padding:clamp(18px,5vw,48px)}.intro,.block,.footer{display:grid;gap:14px}.logo,.screen,.term{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#020302}.logo pre,.screen pre,.term pre{overflow:auto;padding:14px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.42;white-space:pre}.logo pre{color:var(--accent);font-size:clamp(8px,1.25vw,14px);line-height:1.08;letter-spacing:-.02em;text-shadow:0 0 18px rgba(182,255,109,.24)}.prompt{color:var(--accent);font-size:13px}.prompt:before{content:"> "}.lead{max-width:620px;color:var(--muted);font-size:clamp(18px,2.3vw,21px);line-height:1.46}h2{font-size:clamp(20px,2.8vw,26px);line-height:1.1;letter-spacing:-.035em}.links{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}.links a{display:inline-flex;align-items:center;min-height:32px;padding:6px 10px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02);font-size:13px;line-height:1;text-decoration:none}.links a:hover,.links a:focus-visible{border-color:var(--accent);background:var(--soft);color:var(--accent);outline:0}.features li::marker{color:var(--accent)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.screen--wide{grid-column:1/-1}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 8px 0 13px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:12px}.copy{min-height:24px;padding:4px 8px 5px;border:1px solid var(--line);border-radius:999px;background:#050605;color:var(--muted);font-size:11px;cursor:pointer}.copy:hover,.copy:focus-visible,.copy.is-copied{border-color:var(--accent);background:var(--soft);color:var(--accent);outline:0}.footer{padding-top:clamp(22px,4vw,34px);border-top:1px solid var(--line);color:var(--muted)}.footer p,.block>p{color:var(--muted);font-size:13px;line-height:1.45}@media(max-width:760px){.grid{grid-template-columns:1fr}}@media(max-width:560px){:root{--page:min(100% - 24px,980px)}.page{padding-block:16px}.terminal{border-radius:14px}.content{padding:18px}.logo{margin-inline:-4px}.logo pre{font-size:8px}.screen pre,.term pre{font-size:11px}.links{gap:6px}.links a{min-height:30px;padding-inline:9px}}
+:root{color-scheme:dark;--bg:#050505;--panel:#0b0d0c;--panel2:#101312;--text:#e8e3d4;--muted:rgba(232,227,212,.58);--line:rgba(232,227,212,.18);--accent:#b6ff6d;--soft:rgba(182,255,109,.16);--blue:#8cc8ff;--yellow:#ffd166;--red:#ff7b72;--page:min(100% - 40px,1040px);--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,monospace;--sans:Rubik,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}*{box-sizing:border-box}html{background:var(--bg);color:var(--text);font-family:var(--sans);text-size-adjust:100%}body{margin:0;min-width:320px;background:radial-gradient(circle at 14% 0%,rgba(182,255,109,.08),transparent 30rem),linear-gradient(180deg,#060606,#030303)}body:before{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 4px);opacity:.22}h1,h2,p,ul,pre{margin:0}ul{padding-left:1.1rem}li{margin:.34rem 0;font-size:16px;line-height:1.58}a{color:inherit}pre,code,.prompt,.bar,.copy,.screen{font-family:var(--mono)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.page{width:var(--page);margin:0 auto;padding:clamp(20px,6vw,76px) 0}.terminal{overflow:hidden;border:1px solid var(--line);border-radius:18px;background:rgba(5,7,6,.88);box-shadow:0 30px 120px rgba(0,0,0,.58)}.chrome{display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--panel2);color:var(--muted);font-family:var(--mono);font-size:12px}.dots{display:inline-flex;gap:7px}.dots span{width:9px;height:9px;border:1px solid var(--line);border-radius:50%}.content{display:grid;gap:clamp(28px,5vw,46px);padding:clamp(18px,5vw,48px)}.intro,.block,.footer{display:grid;gap:14px}.logo,.term{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#020302}.logo pre,.term pre{overflow:auto;padding:14px;color:var(--text);font-size:12px;line-height:1.42;white-space:pre}.logo pre{color:var(--accent);font-size:clamp(8px,1.25vw,14px);line-height:1.08;letter-spacing:-.02em;text-shadow:0 0 18px rgba(182,255,109,.24)}.prompt{color:var(--accent);font-size:13px}.prompt:before{content:'> '}.lead{max-width:620px;color:var(--muted);font-size:clamp(18px,2.3vw,21px);line-height:1.46}h2{font-size:clamp(20px,2.8vw,26px);line-height:1.1;letter-spacing:-.035em}.links{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}.links a{display:inline-flex;align-items:center;min-height:32px;padding:6px 10px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02);font-size:13px;line-height:1;text-decoration:none}.links a:hover,.links a:focus-visible{border-color:var(--accent);background:var(--soft);color:var(--accent);outline:0}.features li::marker{color:var(--accent)}.gallery-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.gallery-controls{display:flex;align-items:center;gap:8px}.round{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:rgba(255,255,255,.02);color:var(--muted);cursor:pointer}.round:hover,.round:focus-visible{border-color:var(--accent);color:var(--accent);outline:0}.round.is-active{border-color:var(--accent);background:var(--soft);color:var(--accent);box-shadow:0 0 22px rgba(182,255,109,.14)}.round svg{width:15px;height:15px;fill:currentColor}.gallery{display:grid;gap:12px}.viewport{overflow:hidden}.track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;cursor:grab}.track::-webkit-scrollbar{display:none}.track.is-dragging{cursor:grabbing;scroll-snap-type:none}.slide{flex:0 0 min(100%,760px);scroll-snap-align:start}.slide-wide{flex-basis:min(100%,940px)}.screen{height:100%;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#020302}.screen-head{display:flex;align-items:center;min-height:36px;padding:0 13px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--accent);font-size:12px;text-shadow:0 0 14px rgba(182,255,109,.18)}.screen-body{overflow:auto;background:#030403}.screen-body pre{margin:0;padding:14px;white-space:pre;font-size:12px;line-height:1.42;color:var(--text)}.tok-art{color:var(--accent);text-shadow:0 0 12px rgba(182,255,109,.16)}.tok-head{color:var(--accent);font-weight:700}.tok-muted{color:var(--muted)}.tok-key{color:var(--blue)}.tok-value{color:var(--yellow)}.tok-cmd{color:var(--accent)}.tok-prompt{color:var(--red)}.tok-state{color:var(--blue)}.tok-text{color:var(--text)}.gallery.is-grid .viewport{overflow:visible}.gallery.is-grid .track{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;cursor:auto;scroll-snap-type:none}.gallery.is-grid .slide{min-width:0;flex:auto}.gallery.is-grid .slide-wide{grid-column:1/-1}.gallery.is-grid .screen-body{overflow:hidden;height:var(--fit-height,auto)}.gallery.is-grid .fit{transform:scale(var(--fit-scale,1));transform-origin:0 0;width:max-content}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:0 8px 0 13px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:12px}.copy{min-height:24px;padding:4px 8px 5px;border:1px solid var(--line);border-radius:999px;background:#050605;color:var(--muted);font-size:11px;cursor:pointer}.copy:hover,.copy:focus-visible,.copy.is-copied{border-color:var(--accent);background:var(--soft);color:var(--accent);outline:0}.footer{padding-top:clamp(22px,4vw,34px);border-top:1px solid var(--line);color:var(--muted)}.footer p,.block>p{color:var(--muted);font-size:13px;line-height:1.45}@media(max-width:760px){.gallery.is-grid .track{grid-template-columns:1fr}.slide,.slide-wide{flex-basis:100%}}@media(max-width:560px){:root{--page:min(100% - 24px,1040px)}.page{padding-block:16px}.terminal{border-radius:14px}.content{padding:18px}.logo{margin-inline:-4px}.logo pre{font-size:8px}.screen-body pre,.term pre{font-size:11px}.links{gap:6px}.links a{min-height:30px;padding-inline:9px}}
 </style>
 </head>
 <body>
-<main class="page">
-<article class="terminal">
-<div class="chrome" aria-hidden="true"><span class="dots"><span></span><span></span><span></span></span><span>berserk-timer.exe</span></div>
-<div class="content">
-<section class="intro" aria-labelledby="title">
-<div class="logo"><pre aria-label="Berserk Timer ASCII logo">███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
+<main class='page'><article class='terminal'><div class='chrome' aria-hidden='true'><span class='dots'><span></span><span></span><span></span></span><span>berserk-timer.exe</span></div><div class='content'>
+<section class='intro' aria-labelledby='title'><div class='logo'><pre aria-label='Berserk Timer ASCII logo'>███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
 █  █  █▀   ▀  █  ▄▀  █     ▀▄ █▀   ▀  █  ▄▀ █▄█
 █ ▀ ▄ ██▄▄    █▀▀▌ ▄  ▀▀▀▀▄   ██▄▄    █▀▀▌  █▀▄
 █  ▄▀ █▄   ▄▀ █  █  ▀▄▄▄▄▀    █▄   ▄▀ █  █  █  █
@@ -30,171 +23,100 @@
     ▀▀▀ █    ██  █ ▀ █  █▀   ▀  █  ▄▀
         █    ██  █   █  ██▄▄    █▀▀█▌
        █     ▐█      █  █▄   ▄▀ █   █
-      ▀       ▐     ▀   ▀███▀      █</pre></div>
-<p class="prompt">python -m src.main -X -w</p>
-<h1 id="title" class="sr-only">Berserk Timer</h1>
-<p class="lead">CLI timer with witness mode and flexible duration input.</p>
-<ul class="links" aria-label="Primary project links"><li><a href="https://github.com/looksawful/berserk-timer">GitHub</a></li></ul>
-</section>
-
-<section class="block">
-<ul class="features">
-<li>Windows-first beta CLI timer</li>
-<li>Flexible duration input and presets</li>
-<li>Witness mode asks what you accomplished after a session</li>
-<li>Real keyboard controls: p, q, x, r, v, d, u, g, m, s, h, k</li>
-<li>Audio settings menu for sound file, volume, mute and test preview</li>
-</ul>
-</section>
-
-<section class="block" aria-labelledby="screens">
-<h2 id="screens">Real CLI screens</h2>
-<div class="grid">
-<div class="screen screen--wide"><div class="bar"><span>startup</span></div><pre>███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
+      ▀       ▐     ▀   ▀███▀      █</pre></div><p class='prompt'>python -m src.main -X -w</p><h1 id='title' class='sr-only'>Berserk Timer</h1><p class='lead'>CLI timer with witness mode and flexible duration input.</p><ul class='links'><li><a href='https://github.com/looksawful/berserk-timer'>GitHub</a></li></ul></section>
+<section class='block'><ul class='features'><li>Windows-first beta CLI timer</li><li>Flexible duration input and presets</li><li>Witness mode asks what you accomplished after a session</li><li>Real keyboard controls: p, q, x, r, v, d, u, g, m, s, h, k</li><li>Audio settings menu for sound file, volume, mute and test preview</li></ul></section>
+<section class='block gallery' data-gallery aria-labelledby='screens'><div class='gallery-head'><h2 id='screens'>Real CLI screens</h2><div class='gallery-controls'><button class='round' type='button' data-prev aria-label='Previous screen'>‹</button><button class='round' type='button' data-next aria-label='Next screen'>›</button><button class='round' type='button' data-toggle-grid aria-label='Toggle grid view' aria-pressed='false'><svg viewBox='0 0 16 16'><path d='M1.5 1.5h5v5h-5v-5Zm8 0h5v5h-5v-5Zm-8 8h5v5h-5v-5Zm8 0h5v5h-5v-5Z'/></svg></button></div></div><div class='viewport'><div class='track' data-track>
+<article class='slide slide-wide'><div class='screen'><div class='screen-head'><span>startup</span></div><div class='screen-body'><div class='fit'><pre><span class='tok-art'>███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
 █  █  █▀   ▀  █  ▄▀  █     ▀▄ █▀   ▀  █  ▄▀ █▄█
 █ ▀ ▄ ██▄▄    █▀▀▌ ▄  ▀▀▀▀▄   ██▄▄    █▀▀▌  █▀▄
 █  ▄▀ █▄   ▄▀ █  █  ▀▄▄▄▄▀    █▄   ▄▀ █  █  █  █
-███   ▀███▀      █             ▀███▀     █     █
-                ▀                       ▀     ▀
-             █▄
-           ▄     █▀▄▀█
-       ▄▄▄▀▀ ▄█  █ █ █  ▄███▄   █▄▄▄▄
-    ▀▀▀ █    ██  █ ▀ █  █▀   ▀  █  ▄▀
-        █    ██  █   █  ██▄▄    █▀▀█▌
-       █     ▐█      █  █▄   ▄▀ █   █
-      ▀       ▐     ▀   ▀███▀      █
-made by ivan krushinski aka looksawful
+███   ▀███▀      █             ▀███▀     █     █</span>
+<span class='tok-muted'>made by ivan krushinski aka looksawful
 https://github.com/awfulthings/berserk-timer
-© 2025
-version: 0.2.1-beta
+© 2025</span>
+<span class='tok-key'>version: </span><span class='tok-value'>0.2.1-beta</span>
 
-INSTRUCTIONS:
-  • Set timer duration in minutes
-  • Presets: -x (5min), -s (10min), -m (15min), -l (20min), -X (25min), -t (1min test)
-  • Maximum duration: 3 hours
-  • Set your goal for this session (if witness mode enabled, or skip)
-  • Choose sound: --sound alert1.wav (or alert2/alert3/alert4)
-  • Set volume in config.json (1-10 scale, default: 5)
-  • During timer:
-    - Press &#x27;p&#x27; to pause/resume
-    - Press &#x27;q&#x27; to quit
-    - Press &#x27;x&#x27; to zero the timer
-    - Press &#x27;r&#x27; to restart
-    - Press &#x27;v&#x27; to view today&#x27;s log
-    - Press &#x27;d&#x27; to delete today&#x27;s log
-    - Press &#x27;u&#x27; to update duration
-    - Press &#x27;g&#x27; to set/change goal
-    - Press &#x27;m&#x27; to toggle silent mode
-    - Press &#x27;s&#x27; to open audio settings (sound/volume)
+<span class='tok-head'>INSTRUCTIONS:</span>
+<span class='tok-text'>  • Set timer duration in minutes
+  • Presets: </span><span class='tok-cmd'>-x -s -m -l -X -t</span>
+<span class='tok-text'>  • Maximum duration: </span><span class='tok-value'>3 hours</span>
+<span class='tok-text'>  • Choose sound: </span><span class='tok-cmd'>--sound alert1.wav</span>
+<span class='tok-text'>  • Set volume in config.json (1-10 scale, default: 5)</span>
+<span class='tok-cmd'>  • p pause/resume  q quit  x zero  r restart  v view  d delete  u update  g goal  m mute  s settings</span>
+<span class='tok-muted'>------------------------------------------------------------</span>
+<span class='tok-prompt'>Enter timer duration in minutes [max 180] (or press Enter for 5 min default):
+What are you planning to do? (or press Enter to skip):</span></pre></div></div></div></article>
+<article class='slide'><div class='screen'><div class='screen-head'><span>timer loop</span></div><div class='screen-body'><div class='fit'><pre><span class='tok-muted'>Commands: </span><span class='tok-cmd'>\[p]ause \[q]uit \[x]zero timer \[r]estart \[v]iew \[d]elete \[u]pdate \[g]oal \[m]ute \[s]ettings \[h]elp</span>
 
-------------------------------------------------------------
+<span class='tok-key'>Time: </span><span class='tok-value'>24:12</span>
 
-Enter timer duration in minutes [max 180] (or press Enter for 5 min default):
-What are you planning to do? (or press Enter to skip):</pre></div>
-<div class="screen"><div class="bar"><span>timer loop</span></div><pre>Commands: \[p]ause \[q]uit \[x]zero timer \[r]estart \[v]iew \[d]elete \[u]pdate \[g]oal \[m]ute \[s]ettings \[h]elp
-
-Time: 24:12
-
-[SILENT] Time: 24:12
-[PAUSED] Time: 24:12</pre></div>
-<div class="screen"><div class="bar"><span>audio settings</span></div><pre>  ▄▄▄▄▄   ▄███▄     ▄▄▄▄▀ ▄▄▄▄▀ ▄█    ▄     ▄▀    ▄▄▄▄▄
+<span class='tok-state'>[SILENT] </span><span class='tok-key'>Time: </span><span class='tok-value'>24:12</span>
+<span class='tok-state'>[PAUSED] </span><span class='tok-key'>Time: </span><span class='tok-value'>24:12</span></pre></div></div></div></article>
+<article class='slide'><div class='screen'><div class='screen-head'><span>audio settings</span></div><div class='screen-body'><div class='fit'><pre><span class='tok-art'>  ▄▄▄▄▄   ▄███▄     ▄▄▄▄▀ ▄▄▄▄▀ ▄█    ▄     ▄▀    ▄▄▄▄▄
  █     ▀▄ █▀   ▀ ▀▀▀ █ ▀▀▀ █    ██     █  ▄▀     █     ▀▄
-▄  ▀▀▀▀▄   ██▄▄       █     █    ██ ██   █ █ ▀▄ ▄  ▀▀▀▀▄
- ▀▄▄▄▄▀    █▄   ▄▀   █     █     ▐█ █ █  █ █   █ ▀▄▄▄▄▀
-           ▀███▀    ▀     ▀       ▐ █  █ ██  ███
-                                    █   ██
+▄  ▀▀▀▀▄   ██▄▄       █     █    ██ ██   █ █ ▀▄ ▄  ▀▀▀▀▄</span>
 
-═══ AUDIO SETTINGS ═══
+<span class='tok-head'>═══ AUDIO SETTINGS ═══</span>
 
-Volume: [#####-----] 5/10
-Sound:  alert1.wav (1/4)
+<span class='tok-key'>Volume: </span><span class='tok-value'>[#####-----] 5/10</span>
+<span class='tok-key'>Sound:  </span><span class='tok-value'>alert1.wav (1/4)</span>
 
-Available sounds:
-  &gt; 1. alert1.wav
-    2. alert2.wav
+<span class='tok-head'>Available sounds:</span>
+<span class='tok-state'>  > </span><span class='tok-value'>1. alert1.wav</span>
+<span class='tok-text'>    2. alert2.wav
     3. alert3.wav
-    4. alert4.wav
+    4. alert4.wav</span>
 
-Commands:
-  0       = Toggle silent mode
-  1-10    = Set volume (1=min, 10=max)
-  +/-     = Volume up/down
-  &gt;       = Next sound
-  &lt;       = Previous sound
-  t       = Test current settings
-  k       = Stop playing sound
-  Enter   = Close menu
-
-&gt;</pre></div>
-<div class="screen"><div class="bar"><span>help</span></div><pre> ▄  █ ▄███▄   █    █ ▄▄
+<span class='tok-head'>Commands:</span>
+<span class='tok-cmd'>  0 = Toggle silent mode
+  1-10 = Set volume
+  +/- = Volume up/down
+  >/< = Next/Previous sound
+  t = Test current settings
+  k = Stop playing sound
+  Enter = Close menu</span>
+<span class='tok-prompt'>&gt;</span></pre></div></div></div></article>
+<article class='slide'><div class='screen'><div class='screen-head'><span>help</span></div><div class='screen-body'><div class='fit'><pre><span class='tok-art'> ▄  █ ▄███▄   █    █ ▄▄
 █   █ █▀   ▀  █    █   █
-██▀▀█ ██▄▄    █    █▀▀▀
-█   █ █▄   ▄▀ ███▄ █
-   █  ▀███▀       ▀ █
-  ▀                  ▀
+██▀▀█ ██▄▄    █    █▀▀▀</span>
 
-TIMER COMMANDS:
-  p - Pause/Resume timer
+<span class='tok-head'>TIMER COMMANDS:</span>
+<span class='tok-cmd'>  p - Pause/Resume timer
   q - Quit timer (with confirmation)
   x - Zero the timer
   r - Restart timer from beginning
-  v - View today&#x27;s witness log
-  d - Delete today&#x27;s witness log
-  u - Update duration (change timer length)
-  g - Set/change goal for this session
-  m - Toggle silent mode on/off
-  s - Open audio settings (sound file and volume)
+  v - View today\'s witness log
+  d - Delete today\'s witness log
+  u - Update duration
+  g - Set/change goal
+  m - Toggle silent mode
+  s - Open audio settings
   h - Show this help screen
-  k - Stop currently playing sound
+  k - Stop currently playing sound</span>
 
-Press Enter to return to timer...</pre></div>
-<div class="screen"><div class="bar"><span>witness</span></div><pre> ▄▄▄▄▀ ▄█ █▀▄▀█ ▄███▄   █▄▄▄▄
+<span class='tok-prompt'>Press Enter to return to timer...</span></pre></div></div></div></article>
+<article class='slide'><div class='screen'><div class='screen-head'><span>witness</span></div><div class='screen-body'><div class='fit'><pre><span class='tok-art'> ▄▄▄▄▀ ▄█ █▀▄▀█ ▄███▄   █▄▄▄▄
 ▀▀▀ █    █ █ █ █ █▀   ▀  █  ▄▀
-    █    █ █ ▄ █ ██▄▄    █▀▀▌
-   █     ▐█    █ █▄   ▄▀ █  █
-  ▀       ▐   ▀  ▀███▀     █
-                          ▀
+    █    █ █ ▄ █ ██▄▄    █▀▀▌</span>
 
-⏰ TIMER FINISHED ⏰
+<span class='tok-head'>⏰ TIMER FINISHED ⏰</span>
 
-Completed at: 22:41:03
-Goal:         write docs
+<span class='tok-key'>Completed at: </span><span class='tok-value'>22:41:03</span>
+<span class='tok-key'>Goal:         </span><span class='tok-value'>write docs</span>
 
-What did you accomplish? (or press Enter to skip, &#x27;skip&#x27; to cancel, &#x27;k&#x27; to stop alert):</pre></div>
-</div>
-</section>
-
-<section class="block" aria-labelledby="install">
-<h2 id="install">Install</h2>
-<ul class="links" aria-label="Install links"><li><a href="https://github.com/looksawful/berserk-timer/archive/refs/heads/dev.zip">Download ZIP</a></li></ul>
-<div class="term"><div class="bar"><span>~/berserk-timer</span><button type="button" class="copy" data-copy-target="install-code">copy</button></div><pre><code id="install-code">git clone https://github.com/looksawful/berserk-timer
+<span class='tok-prompt'>What did you accomplish? (or press Enter to skip, \'skip\' to cancel, \'k\' to stop alert):</span></pre></div></div></div></article>
+</div></div></section>
+<section class='block' aria-labelledby='install'><h2 id='install'>Install</h2><ul class='links'><li><a href='https://github.com/looksawful/berserk-timer/archive/refs/heads/dev.zip'>Download ZIP</a></li></ul><div class='term'><div class='bar'><span>~/berserk-timer</span><button type='button' class='copy' data-copy-target='install-code'>copy</button></div><pre><code id='install-code'>git clone https://github.com/looksawful/berserk-timer
 cd berserk-timer
-pip install -r requirements.txt</code></pre></div>
-</section>
-
-<section class="block" aria-labelledby="usage">
-<h2 id="usage">Usage</h2>
-<p>Start a timer with a duration, a fractional duration, a preset or silent mode.</p>
-<div class="term"><div class="bar"><span>~/berserk-timer</span><button type="button" class="copy" data-copy-target="usage-code">copy</button></div><pre><code id="usage-code">python -m src.main 10
+pip install -r requirements.txt</code></pre></div></section>
+<section class='block' aria-labelledby='usage'><h2 id='usage'>Usage</h2><p>Start a timer with a duration, a fractional duration, a preset or silent mode.</p><div class='term'><div class='bar'><span>~/berserk-timer</span><button type='button' class='copy' data-copy-target='usage-code'>copy</button></div><pre><code id='usage-code'>python -m src.main 10
 python -m src.main 1.5
 python -m src.main -s
-python -m src.main 25 --mute</code></pre></div>
-</section>
-
-<footer class="footer">
-<ul class="links" aria-label="Secondary project links">
-<li><a href="https://github.com/looksawful/berserk-timer/blob/dev/README.md">README</a></li>
-<li><a href="https://github.com/looksawful/berserk-timer/blob/dev/LICENSE">License</a></li>
-<li><a href="https://github.com/looksawful">@looksawful</a></li>
-<li><a href="https://looksawful.ru">looksawful.ru</a></li>
-</ul>
-<p>Personal and non-commercial use with attribution. Commercial use, resale or paid distribution requires written permission.</p>
-</footer>
-</div>
-</article>
-</main>
+python -m src.main 25 --mute</code></pre></div></section>
+<footer class='footer'><ul class='links'><li><a href='https://github.com/looksawful/berserk-timer/blob/dev/README.md'>README</a></li><li><a href='https://github.com/looksawful/berserk-timer/blob/dev/LICENSE'>License</a></li><li><a href='https://github.com/looksawful'>@looksawful</a></li><li><a href='https://looksawful.ru'>looksawful.ru</a></li></ul><p>Personal and non-commercial use with attribution. Commercial use, resale or paid distribution requires written permission.</p></footer>
+</div></article></main>
 <script>
-document.querySelectorAll("[data-copy-target]").forEach((button)=>{button.addEventListener("click",async()=>{const target=document.getElementById(button.dataset.copyTarget);if(!target)return;try{await navigator.clipboard.writeText(target.textContent.trim());const oldText=button.textContent;button.classList.add("is-copied");button.textContent="copied";window.setTimeout(()=>{button.classList.remove("is-copied");button.textContent=oldText},1000)}catch{const range=document.createRange();range.selectNodeContents(target);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range)}})});
+const gallery=document.querySelector('[data-gallery]');const track=gallery.querySelector('[data-track]');const gridBtn=gallery.querySelector('[data-toggle-grid]');const prev=gallery.querySelector('[data-prev]');const next=gallery.querySelector('[data-next]');const step=()=>Math.max(280,track.clientWidth*.86);function fitGrid(){gallery.querySelectorAll('.screen-body').forEach(body=>{const fit=body.querySelector('.fit');if(!fit)return;fit.style.setProperty('--fit-scale',1);body.style.setProperty('--fit-height','auto');if(!gallery.classList.contains('is-grid'))return;const scale=Math.min(1,body.clientWidth/fit.scrollWidth);fit.style.setProperty('--fit-scale',scale);body.style.setProperty('--fit-height',fit.scrollHeight*scale+'px')})}gridBtn.addEventListener('click',()=>{gallery.classList.toggle('is-grid');gridBtn.classList.toggle('is-active',gallery.classList.contains('is-grid'));gridBtn.setAttribute('aria-pressed',gallery.classList.contains('is-grid'));fitGrid()});prev.addEventListener('click',()=>track.scrollBy({left:-step(),behavior:'smooth'}));next.addEventListener('click',()=>track.scrollBy({left:step(),behavior:'smooth'}));let down=false,startX=0,startLeft=0;track.addEventListener('pointerdown',e=>{if(gallery.classList.contains('is-grid'))return;down=true;startX=e.clientX;startLeft=track.scrollLeft;track.classList.add('is-dragging');track.setPointerCapture(e.pointerId)});track.addEventListener('pointermove',e=>{if(!down)return;track.scrollLeft=startLeft-(e.clientX-startX)});track.addEventListener('pointerup',()=>{down=false;track.classList.remove('is-dragging')});track.addEventListener('pointercancel',()=>{down=false;track.classList.remove('is-dragging')});window.addEventListener('resize',fitGrid);fitGrid();document.querySelectorAll('[data-copy-target]').forEach(button=>{button.addEventListener('click',async()=>{const target=document.getElementById(button.dataset.copyTarget);if(!target)return;try{await navigator.clipboard.writeText(target.textContent.trim());const oldText=button.textContent;button.classList.add('is-copied');button.textContent='copied';window.setTimeout(()=>{button.classList.remove('is-copied');button.textContent=oldText},1000)}catch{const range=document.createRange();range.selectNodeContents(target);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range)}})});
 </script>
 </body>
 </html>
