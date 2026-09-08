@@ -1,7 +1,8 @@
-import sys
 import os
 import shutil
-from typing import Optional, Callable
+import sys
+from collections.abc import Callable
+
 from rich.console import Console
 
 
@@ -21,7 +22,7 @@ class ScreenManager:
         self.is_in_alternate = False
         self.console = Console()
 
-    def enter_alternate_screen(self):
+    def enter_alternate_screen(self) -> None:
         if not self.use_alternate_buffer or self.is_in_alternate:
             return
 
@@ -30,20 +31,18 @@ class ScreenManager:
         sys.stdout.write(self.MOVE_CURSOR_HOME)
         sys.stdout.write(self.HIDE_CURSOR)
         sys.stdout.flush()
-
         self.is_in_alternate = True
 
-    def exit_alternate_screen(self):
+    def exit_alternate_screen(self) -> None:
         if not self.use_alternate_buffer or not self.is_in_alternate:
             return
 
         sys.stdout.write(self.SHOW_CURSOR)
         sys.stdout.write(self.EXIT_ALTERNATE_SCREEN)
         sys.stdout.flush()
-
         self.is_in_alternate = False
 
-    def clear_screen(self):
+    def clear_screen(self) -> None:
         if self.debug_mode:
             print("\n" + "=" * 80 + "\n")
             return
@@ -65,35 +64,35 @@ class ScreenManager:
         except Exception:
             return 80, 24
 
-    def move_cursor(self, row: int, col: int):
+    def move_cursor(self, row: int, col: int) -> None:
         sys.stdout.write(f"\033[{row};{col}H")
         sys.stdout.flush()
 
-    def clear_line(self):
+    def clear_line(self) -> None:
         sys.stdout.write("\033[2K")
         sys.stdout.flush()
 
-    def clear_from_cursor_down(self):
+    def clear_from_cursor_down(self) -> None:
         sys.stdout.write("\033[J")
         sys.stdout.flush()
 
-    def save_cursor_position(self):
+    def save_cursor_position(self) -> None:
         sys.stdout.write(self.SAVE_CURSOR)
         sys.stdout.flush()
 
-    def restore_cursor_position(self):
+    def restore_cursor_position(self) -> None:
         sys.stdout.write(self.RESTORE_CURSOR)
         sys.stdout.flush()
 
-    def hide_cursor(self):
+    def hide_cursor(self) -> None:
         sys.stdout.write(self.HIDE_CURSOR)
         sys.stdout.flush()
 
-    def show_cursor(self):
+    def show_cursor(self) -> None:
         sys.stdout.write(self.SHOW_CURSOR)
         sys.stdout.flush()
 
-    def render_block(self, render_func: Callable, *args, **kwargs):
+    def render_block(self, render_func: Callable[..., object], *args, **kwargs) -> None:
         self.clear_screen()
         render_func(*args, **kwargs)
         sys.stdout.flush()
@@ -120,7 +119,7 @@ class ScreenContext:
         return False
 
 
-_screen_manager: Optional[ScreenManager] = None
+_screen_manager: ScreenManager | None = None
 
 
 def get_screen_manager(
@@ -132,13 +131,16 @@ def get_screen_manager(
     return _screen_manager
 
 
-def init_screen(use_alternate_buffer: bool = True, debug_mode: bool = False):
+def init_screen(
+    use_alternate_buffer: bool = True, debug_mode: bool = False
+) -> ScreenManager:
     screen = get_screen_manager(use_alternate_buffer, debug_mode)
     screen.enter_alternate_screen()
     return screen
 
 
-def cleanup_screen():
+def cleanup_screen() -> None:
     global _screen_manager
-    if _screen_manager:
+    if _screen_manager is not None:
         _screen_manager.exit_alternate_screen()
+        _screen_manager = None

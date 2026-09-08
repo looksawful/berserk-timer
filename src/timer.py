@@ -1,9 +1,10 @@
-import time
-import threading
 import logging
+import threading
+import time
 from typing import Optional
-from .logger import log_event
+
 from .constants import MAX_TIMER_SECONDS
+from .logger import log_event
 
 
 class TimerDurationError(ValueError):
@@ -50,23 +51,24 @@ class Timer:
             raise TimerDurationError(f"Duration cannot exceed {hours} hours")
 
     def start(self) -> None:
-        if not self.is_running():
-            with self._lock:
-                self.remaining = self.duration
-                self._paused = False
-                self._zeroed = False
+        if self.is_running():
+            return
+        with self._lock:
+            self.remaining = self.duration
+            self._paused = False
+            self._zeroed = False
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._run)
         self._thread.start()
 
     def _run(self) -> None:
-        last_time = time.time()
+        last_time = time.monotonic()
         while self.get_remaining_time() > 0 and not self._stop_event.is_set():
             time.sleep(0.1)
             if self._paused:
-                last_time = time.time()
+                last_time = time.monotonic()
                 continue
-            now = time.time()
+            now = time.monotonic()
             elapsed = now - last_time
             with self._lock:
                 self.remaining -= elapsed

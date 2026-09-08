@@ -1,3 +1,33 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "berserk-timer"
+version = "0.2.1b0"
+description = "CLI timer with witness mode and flexible duration input."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "looksawful" }]
+dependencies = [
+  "pygame>=2.1.2",
+  "rich>=13.3.3",
+]
+
+[project.urls]
+Repository = "https://github.com/looksawful/berserk-timer"
+Issues = "https://github.com/looksawful/berserk-timer/issues"
+
+[project.scripts]
+berserk = "src.main:main"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.data-files]
+"share/berserk-timer/assets" = ["assets/*.wav", "assets/*.ico"]
+
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
@@ -8,8 +38,8 @@ line-length = 88
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP", "SIM"]
-ignore = []
+select = ["E", "F", "W", "B"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.10"
