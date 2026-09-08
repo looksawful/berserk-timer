@@ -7,7 +7,6 @@ import time
 
 from .audio import get_sound_duration, get_sound_path, play_sound, stop_sound
 from .cli import cli_witness_form, run_cli_timer, validate_duration
-from .config_manager import load_config
 from .logger import log_event, log_timer_end, log_timer_start, log_witness_response
 from .timer import Timer, TimerDurationError
 
