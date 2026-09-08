@@ -85,16 +85,16 @@ I completely rewrote the internal engine (`TimerCore`).
 
    _(If `requirements.txt` doesn't exist yet, standard Python libs should suffice for now)._
 
-3. **Run:** simple run `brsrk-cli.bat`.
+3. **Run:** use `brsrk.bat`.
 
 #### Optional: Create a Shortcut
 
 Since `.bat` files can't be pinned easily to the Taskbar, I use this trick to make it look like a native app:
 
-1. Create a standard shortcut to `brsrk-cli.bat` (Right click -> Create shortcut).
+1. Create a standard shortcut to `brsrk.bat` (Right click -> Create shortcut).
 2. Right-click the shortcut -> **Properties**.
 3. In the **Target** field, change it to use `cmd.exe`. It should look like this:
-   C:\Windows\System32\cmd.exe /c "C:\Users\YourName\Path\To\BerserkTimer\brsrk-cli.bat"
+   C:\Windows\System32\cmd.exe /c "C:\Users\YourName\Path\To\BerserkTimer\brsrk.bat"
 
 4. Click **Change Icon** and select `assets/icon.ico` from the project folder.
 5. Now you can pin it to the Taskbar!
