@@ -7,19 +7,21 @@ import threading
 import time
 
 from .ascii_art import ASCII_LOGO, AUTHOR_SIGNATURE
+from .audio import (
+    get_sound_duration,
+    get_sound_path,
+    play_sound,
+    set_mute,
+    stop_sound,
+)
 from .cli import cli_witness_form, run_cli_timer, validate_duration
 from .config_manager import load_config
 from .constants import MAX_TIMER_SECONDS
 from .logger import (
-    get_sound_duration,
-    get_sound_path,
     log_event,
     log_timer_end,
     log_timer_start,
     log_witness_response,
-    play_sound,
-    set_mute,
-    stop_sound,
 )
 from .screen_manager import cleanup_screen, init_screen
 from .timer import Timer, TimerDurationError
@@ -34,7 +36,7 @@ def show_help() -> None:
     print("USAGE:")
     print("  python -m src.main [OPTIONS] [DURATION]\n")
     print("OPTIONS:")
-    print("  -h, --help, /?         Show this help message and exit")
+    print("  -h, --help, /h, /?    Show this help message and exit")
     print("  -x, --xs               Extra Small preset (5 minutes)")
     print("  -s, --small            Small preset (10 minutes)")
     print("  -m, --medium           Medium preset (15 minutes)")
@@ -43,7 +45,7 @@ def show_help() -> None:
     print("  -t, --test             Test preset (1 minute)")
     print("  -w, --witness          Enable witness mode (activity logging)")
     print("  -c MESSAGE             Custom advice message")
-    print("  --sound FILE           Sound file to play (alert1-4.wav)")
+    print("  --sound FILE           Sound file to play (alert1-5.wav)")
     print("  --seconds              Interpret duration as seconds instead of minutes")
     print("  --mute                 Launch in silent mode\n")
     print("LIMITS:")
@@ -103,7 +105,8 @@ def parse_arguments() -> argparse.Namespace:
         dest="show_help",
         help="Show help information and exit",
     )
-    return parser.parse_args()
+    argv = ["--help" if arg in {"/h", "/?"} else arg for arg in sys.argv[1:]]
+    return parser.parse_args(argv)
 
 
 def calculate_duration(args: argparse.Namespace, config: dict) -> float | None:
@@ -312,7 +315,7 @@ def main() -> None:
 
     args = parse_arguments()
 
-    if args.show_help or any(arg in sys.argv for arg in ["/h", "/?"]):
+    if args.show_help:
         show_help()
 
     debug_mode = args.debug
@@ -331,8 +334,8 @@ def main() -> None:
     )
     print(f"  • Maximum duration: {MAX_TIMER_SECONDS // 3600} hours")
     print("  • Set your goal for this session (if witness mode enabled, or skip)")
-    print("  • Choose sound: --sound alert1.wav (or alert2/alert3/alert4)")
-    print("  • Set volume in config.json (1-10 scale, default: 5)")
+    print("  • Choose sound: --sound alert1.wav (or alert2/alert3/alert4/alert5)")
+    print("  • Set volume in config.json (0-10 scale, default: 5)")
     print("  • During timer:")
     print("    - Press 'p' to pause/resume")
     print("    - Press 'q' to quit")
