@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -29,10 +30,20 @@ def get_default_config_path() -> Path:
         base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
         return base / "Berserk Timer" / "config.json"
     if sys.platform.startswith("darwin"):
-        return Path.home() / "Library" / "Application Support" / "Berserk Timer" / "config.json"
+        return (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Berserk Timer"
+            / "config.json"
+        )
     xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
     base = Path(xdg_config_home) if xdg_config_home else Path.home() / ".config"
     return base / "berserk-timer" / "config.json"
+
+
+def get_legacy_source_config_path() -> Path:
+    return Path(__file__).resolve().parent.parent / "config.json"
 
 
 def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
@@ -40,8 +51,12 @@ def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, 
     path.parent.mkdir(parents=True, exist_ok=True)
 
     if not path.exists():
-        with path.open("w", encoding="utf-8") as file:
-            json.dump(DEFAULT_CONFIG, file, indent=4)
+        legacy_path = get_legacy_source_config_path() if config_path is None else None
+        if legacy_path is not None and legacy_path.is_file() and legacy_path != path:
+            shutil.copyfile(legacy_path, path)
+        else:
+            with path.open("w", encoding="utf-8") as file:
+                json.dump(DEFAULT_CONFIG, file, indent=4)
 
     with path.open(encoding="utf-8") as file:
         loaded = json.load(file)
