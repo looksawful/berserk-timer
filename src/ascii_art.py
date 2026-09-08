@@ -16,7 +16,7 @@ ASCII_LOGO: str = r"""
 
 # Author signature with clickable link
 AUTHOR_SIGNATURE: str = """made by ivan krushinski aka looksawful
-https://github.com/awfulthings/berserk-timer
+https://github.com/looksawful/berserk-timer
 © 2025"""
 
 ASCII_SETTINGS: str = r"""
