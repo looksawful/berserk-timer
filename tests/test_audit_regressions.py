@@ -38,6 +38,14 @@ def test_unknown_cli_arguments_are_rejected(monkeypatch):
         main.parse_arguments()
 
 
+def test_windows_help_alias_is_supported(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["berserk", "/h"])
+
+    args = main.parse_arguments()
+
+    assert args.show_help is True
+
+
 def test_explicit_zero_duration_is_not_treated_as_interactive(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["berserk", "0"])
     monkeypatch.setattr(main, "init_screen", lambda **_kwargs: None)
