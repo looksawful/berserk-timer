@@ -1,18 +1,18 @@
-import subprocess
+from pathlib import Path
 
-import src.logger as logger
+import src.audio as audio
 
 
 def test_stop_sound_never_uses_system_wide_killall(monkeypatch):
-    calls = []
+    monkeypatch.setattr(audio.sys, "platform", "linux")
+    monkeypatch.setattr(audio, "_sound_process", None)
 
-    def fake_run(command, *args, **kwargs):
-        calls.append(command)
-        return subprocess.CompletedProcess(command, 0)
+    audio.stop_sound()
 
-    monkeypatch.setattr(logger.subprocess, "run", fake_run)
-    monkeypatch.setattr(logger.sys, "platform", "linux")
+    source = Path(audio.__file__).read_text(encoding="utf-8")
+    assert "killall" not in source
 
-    logger.stop_sound()
 
-    assert not any(command and command[0] == "killall" for command in calls)
+def test_linux_audio_does_not_change_system_master_volume():
+    source = Path(audio.__file__).read_text(encoding="utf-8")
+    assert "amixer" not in source
