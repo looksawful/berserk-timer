@@ -374,25 +374,27 @@ def main() -> None:
             )
             sys.exit(1)
     else:
-        default_duration_minutes = 5
+        default_duration_minutes: float = 5.0
         while True:
             try:
                 duration_input = input(
                     "\nEnter timer duration in minutes "
                     f"[max {max_duration_minutes:.0f}] "
-                    f"(or press Enter for {default_duration_minutes} min default): "
+                    f"(or press Enter for {default_duration_minutes:g} min default): "
                 ).strip()
                 if not duration_input:
                     confirmation = (
                         input(
-                            f"Use default {default_duration_minutes} minutes? (y/n): "
+                            f"Use default {default_duration_minutes:g} minutes? (y/n): "
                         )
                         .strip()
                         .lower()
                     )
                     if confirmation in ("y", "yes", ""):
                         duration_minutes = default_duration_minutes
-                        print(f"Using default duration: {default_duration_minutes} minutes")
+                        print(
+                            f"Using default duration: {default_duration_minutes:g} minutes"
+                        )
                         duration = duration_minutes * 60
                         break
                     continue
