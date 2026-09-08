@@ -1,6 +1,8 @@
 import copy
 import json
 import os
+import sys
+from pathlib import Path
 from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
@@ -22,12 +24,26 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
-def load_config(config_path: str = "config.json") -> dict[str, Any]:
-    if not os.path.exists(config_path):
-        with open(config_path, "w", encoding="utf-8") as file:
+def get_default_config_path() -> Path:
+    if sys.platform.startswith("win"):
+        base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
+        return base / "Berserk Timer" / "config.json"
+    if sys.platform.startswith("darwin"):
+        return Path.home() / "Library" / "Application Support" / "Berserk Timer" / "config.json"
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+    base = Path(xdg_config_home) if xdg_config_home else Path.home() / ".config"
+    return base / "berserk-timer" / "config.json"
+
+
+def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
+    path = Path(config_path) if config_path is not None else get_default_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists():
+        with path.open("w", encoding="utf-8") as file:
             json.dump(DEFAULT_CONFIG, file, indent=4)
 
-    with open(config_path, encoding="utf-8") as file:
+    with path.open(encoding="utf-8") as file:
         loaded = json.load(file)
 
     config = copy.deepcopy(DEFAULT_CONFIG)
