@@ -5,7 +5,6 @@ import random
 import sys
 import threading
 import time
-from typing import Optional, Tuple
 
 from .ascii_art import ASCII_LOGO, AUTHOR_SIGNATURE
 from .cli import cli_witness_form, run_cli_timer, validate_duration
@@ -49,7 +48,8 @@ def show_help() -> None:
     print("  --mute                 Launch in silent mode\n")
     print("LIMITS:")
     print(
-        f"  Maximum duration: {MAX_TIMER_SECONDS // 3600} hours ({MAX_TIMER_SECONDS // 60} minutes)\n"
+        f"  Maximum duration: {MAX_TIMER_SECONDS // 3600} hours "
+        f"({MAX_TIMER_SECONDS // 60} minutes)\n"
     )
     print("EXAMPLES:")
     print("  python -m src.main 25              # 25 minute timer")
@@ -103,10 +103,10 @@ def parse_arguments() -> argparse.Namespace:
         dest="show_help",
         help="Show help information and exit",
     )
-    return parser.parse_known_args()[0]
+    return parser.parse_args()
 
 
-def calculate_duration(args: argparse.Namespace, config: dict) -> Optional[float]:
+def calculate_duration(args: argparse.Namespace, config: dict) -> float | None:
     if args.duration is not None:
         factor = 1 if args.seconds else 60
         duration = args.duration * factor
@@ -136,16 +136,16 @@ def on_timer_end(
     timer: Timer,
     witness_mode: bool,
     config: dict,
-    custom_phrase: Optional[str],
-    goal: Optional[str] = None,
-) -> Tuple[float, float]:
+    custom_phrase: str | None,
+    goal: str | None = None,
+) -> tuple[float, float]:
     log_timer_end()
     timer_end_time = time.time()
     timer_end_perf = time.perf_counter()
 
     stop_repeating_alert = threading.Event()
 
-    def repeating_alert():
+    def repeating_alert() -> None:
         if timer.is_silent():
             return
 
@@ -159,7 +159,7 @@ def on_timer_end(
             sound_path = get_sound_path(sound_file)
             sound_duration = get_sound_duration(sound_path)
             if sound_duration > 0:
-                elapsed = 0
+                elapsed = 0.0
                 while elapsed < sound_duration and not stop_repeating_alert.is_set():
                     time.sleep(0.1)
                     elapsed += 0.1
@@ -178,7 +178,11 @@ def on_timer_end(
     if witness_mode:
         safe_word = config.get("safe_word", "skip")
         response, final_timer_end_time = cli_witness_form(
-            safe_word, timer, goal, timer_end_time, stop_repeating_alert=stop_repeating_alert
+            safe_word,
+            timer,
+            goal,
+            timer_end_time,
+            stop_repeating_alert=stop_repeating_alert,
         )
 
         stop_repeating_alert.set()
@@ -188,34 +192,31 @@ def on_timer_end(
             log_witness_response(response)
 
         return final_timer_end_time or timer_end_time, timer_end_perf
-    else:
-        stop_repeating_alert.set()
 
-        messages = config.get("messages", [])
-        if messages:
-            message = custom_phrase or random.choice(messages)
-            logging.info(f"Advice: {message}")
-            print(f"\n💡 {message}")
+    stop_repeating_alert.set()
+    messages = config.get("messages", [])
+    if messages:
+        message = custom_phrase or random.choice(messages)
+        logging.info(f"Advice: {message}")
+        print(f"\n💡 {message}")
 
-        return timer_end_time, timer_end_perf
+    return timer_end_time, timer_end_perf
 
 
 def run_timer_loop(
     args: argparse.Namespace,
     config: dict,
-    duration: Optional[float],
+    duration: float | None,
     witness_mode: bool,
-    custom_phrase: Optional[str],
-    goal: Optional[str],
+    custom_phrase: str | None,
+    goal: str | None,
     interactive_mode: bool,
 ) -> None:
     first_iteration = True
-    max_duration_minutes = MAX_TIMER_SECONDS / 60
 
     while True:
         if not first_iteration:
             while True:
-                # print(f"\n[Max: {max_duration_minutes:.0f} minutes]")
                 user_input = input("Enter timer duration in minutes: ").strip()
                 if not user_input:
                     logging.error("Duration is required. Please enter a number.")
@@ -232,38 +233,33 @@ def run_timer_loop(
                     logging.error("Invalid input. Please enter a numeric value.")
             goal = input("Enter your goal (or leave empty): ").strip() or None
 
-        if interactive_mode:
-            display_duration = duration / 60 if duration else 0
-            unit = "minutes"
-        else:
-            display_duration = (
-                duration if args.seconds else (duration / 60 if duration else 0)
-            )
-            unit = "seconds" if args.seconds else "minutes"
-
-        log_event(
-            f"Timer started for {display_duration} {unit}. Witness mode: {witness_mode}. Custom message: {custom_phrase}. Goal: {goal}"
-        )
-
-        log_timer_start(duration / 60, goal)
-
-        if not duration:
+        if duration is None:
             logging.error("Error: Duration cannot be None.")
             sys.exit(1)
 
-        sound_file = (
-            args.sound
-            if hasattr(args, "sound") and args.sound
-            else config.get("sound_file", "alert1.wav")
+        if interactive_mode:
+            display_duration = duration / 60
+            unit = "minutes"
+        else:
+            display_duration = duration if args.seconds else duration / 60
+            unit = "seconds" if args.seconds else "minutes"
+
+        log_event(
+            "Timer started for "
+            f"{display_duration} {unit}. Witness mode: {witness_mode}. "
+            f"Custom message: {custom_phrase}. Goal: {goal}"
         )
+        log_timer_start(duration / 60, goal)
+
+        sound_file = args.sound or config.get("sound_file", "alert1.wav")
         volume = config.get("volume", 5)
 
         try:
             timer_instance = Timer(
                 duration, goal=goal, sound_file=sound_file, volume=volume
             )
-        except TimerDurationError as e:
-            print(f"Error creating timer: {e}")
+        except TimerDurationError as exc:
+            print(f"Error creating timer: {exc}")
             sys.exit(1)
 
         if args.mute:
@@ -283,7 +279,7 @@ def run_timer_loop(
             else:
                 log_event("Timer ended.")
 
-            timer_end_time, timer_end_perf = on_timer_end(
+            _timer_end_time, timer_end_perf = on_timer_end(
                 timer_instance, witness_mode, config, custom_phrase, goal
             )
         else:
@@ -311,13 +307,16 @@ def run_timer_loop(
 def main() -> None:
     if sys.platform.startswith("win"):
         import codecs
+
         sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
     args = parse_arguments()
 
-    debug_mode = hasattr(args, "debug") and args.debug
-    screen = init_screen(use_alternate_buffer=True, debug_mode=debug_mode)
+    if args.show_help or any(arg in sys.argv for arg in ["/h", "/?"]):
+        show_help()
 
+    debug_mode = args.debug
+    init_screen(use_alternate_buffer=True, debug_mode=debug_mode)
     atexit.register(cleanup_screen)
 
     print(ASCII_LOGO)
@@ -327,7 +326,8 @@ def main() -> None:
     print("\nINSTRUCTIONS:")
     print("  • Set timer duration in minutes")
     print(
-        "  • Presets: -x (5min), -s (10min), -m (15min), -l (20min), -X (25min), -t (1min test)"
+        "  • Presets: -x (5min), -s (10min), -m (15min), -l (20min), "
+        "-X (25min), -t (1min test)"
     )
     print(f"  • Maximum duration: {MAX_TIMER_SECONDS // 3600} hours")
     print("  • Set your goal for this session (if witness mode enabled, or skip)")
@@ -346,52 +346,53 @@ def main() -> None:
     print("    - Press 's' to open audio settings (sound/volume)")
     print("\n" + "-" * 60 + "\n")
 
-    if (
-        hasattr(args, "show_help")
-        and args.show_help
-        or any(arg in sys.argv for arg in ["/h", "/?"])
-    ):
-        show_help()
-
     config = load_config()
 
     interactive_mode = not any(
-        [args.duration, args.x, args.s, args.m, args.l, args.X, args.t]
+        [
+            args.duration is not None,
+            args.x,
+            args.s,
+            args.m,
+            args.l,
+            args.X,
+            args.t,
+        ]
     )
 
     max_duration_minutes = MAX_TIMER_SECONDS / 60
 
     if not interactive_mode:
         duration = calculate_duration(args, config)
-        if not duration:
+        if duration is None:
             print(
-                "Please provide a duration as a number or one of the preset flags (-x, -s, -m, -l, -X, -t)."
+                "Please provide a duration as a number or one of the preset flags "
+                "(-x, -s, -m, -l, -X, -t)."
             )
             sys.exit(1)
     else:
-        DEFAULT_DURATION_MINUTES = 5
+        default_duration_minutes = 5
         while True:
             try:
                 duration_input = input(
-                    f"\nEnter timer duration in minutes [max {max_duration_minutes:.0f}] (or press Enter for {DEFAULT_DURATION_MINUTES} min default): "
+                    "\nEnter timer duration in minutes "
+                    f"[max {max_duration_minutes:.0f}] "
+                    f"(or press Enter for {default_duration_minutes} min default): "
                 ).strip()
                 if not duration_input:
                     confirmation = (
                         input(
-                            f"Use default {DEFAULT_DURATION_MINUTES} minutes? (y/n): "
+                            f"Use default {default_duration_minutes} minutes? (y/n): "
                         )
                         .strip()
                         .lower()
                     )
                     if confirmation in ("y", "yes", ""):
-                        duration_minutes = DEFAULT_DURATION_MINUTES
-                        print(
-                            f"Using default duration: {DEFAULT_DURATION_MINUTES} minutes"
-                        )
+                        duration_minutes = default_duration_minutes
+                        print(f"Using default duration: {default_duration_minutes} minutes")
                         duration = duration_minutes * 60
                         break
-                    else:
-                        continue
+                    continue
                 duration_minutes = float(duration_input)
                 duration = duration_minutes * 60
 
