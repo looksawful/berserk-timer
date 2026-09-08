@@ -3,6 +3,7 @@ import threading
 
 import pytest
 
+import src.audio as audio
 import src.logger as logger
 import src.main as main
 import src.screen_manager as screen_manager
@@ -53,7 +54,9 @@ def test_explicit_zero_duration_is_not_treated_as_interactive(monkeypatch):
         main.main()
 
 
-def test_audio_playback_is_not_disabled_when_file_logging_is_unavailable(monkeypatch, tmp_path):
+def test_audio_playback_is_not_disabled_when_file_logging_is_unavailable(
+    monkeypatch, tmp_path
+):
     sound = tmp_path / "alert.wav"
     sound.write_bytes(b"not-a-real-wave")
     started = []
@@ -67,12 +70,12 @@ def test_audio_playback_is_not_disabled_when_file_logging_is_unavailable(monkeyp
             started.append(True)
 
     monkeypatch.setattr(logger, "LOG_READY", False)
-    monkeypatch.setattr(logger, "_global_mute", False)
-    monkeypatch.setattr(logger, "get_sound_path", lambda _name: str(sound))
-    monkeypatch.setattr(logger, "get_sound_duration", lambda _path: 1.0)
+    monkeypatch.setattr(audio, "_global_mute", False)
+    monkeypatch.setattr(audio, "get_sound_path", lambda _name: str(sound))
+    monkeypatch.setattr(audio, "get_sound_duration", lambda _path: 1.0)
     monkeypatch.setattr(threading, "Thread", FakeThread)
 
-    logger.play_sound("alert.wav", volume=5)
+    audio.play_sound("alert.wav", volume=5)
 
     assert started == [True]
 
