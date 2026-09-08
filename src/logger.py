@@ -1,10 +1,8 @@
 import glob
 import logging
 import os
-import subprocess
 import sys
 from datetime import datetime
-from typing import Optional
 
 LOG_DIR = "logs"
 LOG_READY = True
@@ -101,7 +99,7 @@ def delete_today_log() -> None:
         try:
             os.remove(filename)
             print(f"Today's witness log deleted: {filename}")
-        except Exception as exc:
+        except OSError as exc:
             print(f"Error deleting today's log {filename}: {exc}")
     else:
         print("No log for today to delete.")
@@ -109,198 +107,12 @@ def delete_today_log() -> None:
 
 def delete_all_logs() -> None:
     logging.shutdown()
-    files = [os.path.join(LOG_DIR, "berserk.log")] + glob.glob(
+    files = [os.path.join(LOG_DIR, "berserk.log"), *glob.glob(
         os.path.join(LOG_DIR, "witness_log_*.txt")
-    )
+    )]
     for file in files:
         if os.path.exists(file):
             try:
                 os.remove(file)
-            except Exception as exc:
+            except OSError as exc:
                 print(f"Error deleting file {file}: {exc}")
-
-
-_sound_playing = False
-_sound_start_time = 0.0
-_sound_duration = 0.0
-_sound_name = ""
-_global_mute = False
-
-
-def get_sound_duration(sound_path: str) -> float:
-    try:
-        import wave
-
-        with wave.open(sound_path, "r") as wav_file:
-            frames = wav_file.getnframes()
-            rate = wav_file.getframerate()
-            return frames / float(rate)
-    except Exception:
-        return 0.0
-
-
-def is_sound_playing() -> bool:
-    return _sound_playing
-
-
-def is_globally_muted() -> bool:
-    return _global_mute
-
-
-def get_sound_remaining() -> tuple[int, int, str]:
-    global _sound_playing
-    if not _sound_playing:
-        return (0, 0, "")
-
-    import time
-
-    elapsed = time.monotonic() - _sound_start_time
-    remaining = max(0.0, _sound_duration - elapsed)
-
-    if remaining <= 0:
-        _sound_playing = False
-
-    return (int(remaining), int(_sound_duration), _sound_name)
-
-
-def get_available_sounds() -> list[str]:
-    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
-    if not os.path.exists(assets_dir):
-        return []
-
-    return sorted(file for file in os.listdir(assets_dir) if file.endswith(".wav"))
-
-
-def get_sound_path(sound_filename: str) -> str:
-    asset_path = os.path.join(os.path.dirname(__file__), "..", "assets", sound_filename)
-    return os.path.abspath(asset_path)
-
-
-def play_sound(
-    sound_filename: str = "alert1.wav", volume: int = 5, duration: int | None = None
-) -> None:
-    import threading
-    import time
-
-    global _sound_playing, _sound_start_time, _sound_duration, _sound_name
-
-    if _global_mute:
-        return
-
-    asset_path = get_sound_path(sound_filename)
-    if not os.path.exists(asset_path):
-        print(f"Sound file not found: {asset_path}")
-        print("\a", end="", flush=True)
-        return
-
-    file_duration = get_sound_duration(asset_path)
-    actual_duration = float(duration) if duration is not None else file_duration
-
-    _sound_playing = True
-    _sound_start_time = time.monotonic()
-    _sound_duration = actual_duration
-    _sound_name = sound_filename
-
-    volume_percent = max(0, min(10, volume)) * 10
-
-    def play_thread() -> None:
-        if sys.platform.startswith("win"):
-            try:
-                try:
-                    os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-                    import pygame
-
-                    pygame.mixer.init()
-                    pygame.mixer.music.set_volume(volume_percent / 100)
-                    pygame.mixer.music.load(asset_path)
-                    pygame.mixer.music.play()
-                    if duration is not None:
-                        time.sleep(duration)
-                        pygame.mixer.music.stop()
-                    else:
-                        while pygame.mixer.music.get_busy():
-                            time.sleep(0.1)
-                except ImportError:
-                    import winsound
-
-                    winsound.PlaySound(
-                        asset_path, winsound.SND_FILENAME | winsound.SND_ASYNC
-                    )
-                    if duration is not None:
-                        time.sleep(duration)
-                        winsound.PlaySound(None, winsound.SND_PURGE)
-            except Exception as exc:
-                print(f"Error playing sound on Windows: {exc}")
-                print("\a", end="", flush=True)
-        elif sys.platform.startswith("linux"):
-            try:
-                subprocess.run(
-                    ["amixer", "-q", "sset", "Master", f"{volume_percent}%"],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                cmd = ["aplay", "-q", asset_path]
-                if duration is not None:
-                    cmd = ["timeout", str(duration), *cmd]
-                subprocess.run(
-                    cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-            except Exception as exc:
-                print(f"Error playing sound on Linux: {exc}")
-                print("\a", end="", flush=True)
-        elif sys.platform.startswith("darwin"):
-            try:
-                cmd = ["afplay", "-v", str(volume_percent / 100), asset_path]
-                if duration is not None:
-                    proc = subprocess.Popen(
-                        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                    )
-                    try:
-                        proc.wait(timeout=duration)
-                    except subprocess.TimeoutExpired:
-                        proc.terminate()
-                        proc.wait()
-                else:
-                    subprocess.run(
-                        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                    )
-            except Exception as exc:
-                print(f"Error playing sound on macOS: {exc}")
-                print("\a", end="", flush=True)
-        else:
-            print("\a", end="", flush=True)
-
-        global _sound_playing
-        _sound_playing = False
-
-    threading.Thread(target=play_thread, daemon=True).start()
-
-
-def stop_sound() -> None:
-    global _sound_playing
-    try:
-        if sys.platform.startswith("win"):
-            try:
-                import pygame
-
-                if pygame.mixer.get_init():
-                    pygame.mixer.music.stop()
-            except ImportError:
-                import winsound
-
-                winsound.PlaySound(None, winsound.SND_PURGE)
-        elif sys.platform.startswith("linux"):
-            subprocess.run(["killall", "-q", "aplay"], stderr=subprocess.DEVNULL)
-        elif sys.platform.startswith("darwin"):
-            subprocess.run(["killall", "-q", "afplay"], stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-    finally:
-        _sound_playing = False
-
-
-def set_mute(mute: bool) -> None:
-    global _global_mute
-    _global_mute = bool(mute)
-    if _global_mute and is_sound_playing():
-        stop_sound()
