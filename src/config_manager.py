@@ -1,8 +1,9 @@
+import copy
 import json
 import os
-from typing import Any, Dict
+from typing import Any
 
-DEFAULT_CONFIG: Dict[str, Any] = {
+DEFAULT_CONFIG: dict[str, Any] = {
     "messages": [
         "Drink water",
         "Do push-ups",
@@ -13,43 +14,55 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "Drink tea",
         "Read a few pages",
     ],
-    "presets": {"xs": 5, "s": 10, "m": 15, "l": 20, "xl": 25, "test": 1},  # test preset: 1 minute
+    "presets": {"xs": 5, "s": 10, "m": 15, "l": 20, "xl": 25, "test": 1},
     "witness_mode": True,
     "safe_word": "skip",
-    "sound_file": "alert1.wav",  # default sound file in assets/
-    "volume": 5,  # volume level 0-10 (5 = 50%)
+    "sound_file": "alert1.wav",
+    "volume": 5,
 }
 
 
-def load_config(config_path: str = "config.json") -> Dict[str, Any]:
-    """Loads the configuration from a JSON file or creates a default one if not existent.
-    Args:
-        config_path (str): Path to the configuration file.
-    Returns:
-        Dict[str, Any]: Configuration dictionary.
-    """
+def load_config(config_path: str = "config.json") -> dict[str, Any]:
     if not os.path.exists(config_path):
-        with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(DEFAULT_CONFIG, f, indent=4)
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-    # Sanitize messages: remove empty or whitespace-only entries
-    if "messages" in config and isinstance(config["messages"], list):
-        config["messages"] = [m for m in config["messages"] if isinstance(m, str) and m.strip()]
-    # Ensure safe_word present
-    if "safe_word" not in config:
-        config["safe_word"] = DEFAULT_CONFIG.get("safe_word", "skip")
-    # Ensure sound_file present
-    if "sound_file" not in config:
-        config["sound_file"] = DEFAULT_CONFIG.get("sound_file", "alert1.wav")
-    # Ensure volume present and valid (0-10)
-    if "volume" not in config:
-        config["volume"] = DEFAULT_CONFIG.get("volume", 5)
+        with open(config_path, "w", encoding="utf-8") as file:
+            json.dump(DEFAULT_CONFIG, file, indent=4)
+
+    with open(config_path, encoding="utf-8") as file:
+        loaded = json.load(file)
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    if isinstance(loaded, dict):
+        config.update(loaded)
+
+    messages = config.get("messages")
+    if isinstance(messages, list):
+        config["messages"] = [
+            message
+            for message in messages
+            if isinstance(message, str) and message.strip()
+        ]
     else:
-        # Validate volume range
-        try:
-            vol = int(config["volume"])
-            config["volume"] = max(0, min(10, vol))  # Clamp to 0-10
-        except (ValueError, TypeError):
-            config["volume"] = 5
+        config["messages"] = copy.deepcopy(DEFAULT_CONFIG["messages"])
+
+    presets = config.get("presets")
+    if not isinstance(presets, dict):
+        config["presets"] = copy.deepcopy(DEFAULT_CONFIG["presets"])
+
+    safe_word = config.get("safe_word")
+    if not isinstance(safe_word, str) or not safe_word.strip():
+        config["safe_word"] = DEFAULT_CONFIG["safe_word"]
+
+    sound_file = config.get("sound_file")
+    if not isinstance(sound_file, str) or not sound_file.strip():
+        config["sound_file"] = DEFAULT_CONFIG["sound_file"]
+
+    try:
+        volume = int(config.get("volume", DEFAULT_CONFIG["volume"]))
+        config["volume"] = max(0, min(10, volume))
+    except (ValueError, TypeError):
+        config["volume"] = DEFAULT_CONFIG["volume"]
+
+    config["witness_mode"] = bool(
+        config.get("witness_mode", DEFAULT_CONFIG["witness_mode"])
+    )
     return config
