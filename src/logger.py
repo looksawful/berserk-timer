@@ -1,9 +1,9 @@
+import glob
 import logging
 import os
-import glob
-from datetime import datetime
-import sys
 import subprocess
+import sys
+from datetime import datetime
 from typing import Optional
 
 LOG_DIR = "logs"
@@ -24,7 +24,8 @@ except Exception:
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
     sys.stderr.write(
-        "[berserk-timer] Logging directory unavailable. Falling back to stderr; witness logs will not be saved.\n"
+        "[berserk-timer] Logging directory unavailable. Falling back to stderr; "
+        "witness logs will not be saved.\n"
     )
 
 
@@ -41,12 +42,12 @@ def log_witness_response(response: str) -> None:
         return
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    with open(filename, "a", encoding="utf-8") as f:
+    with open(filename, "a", encoding="utf-8") as file:
         timestamp = datetime.now().strftime("%H:%M:%S")
-        f.write(f"[{timestamp}] {response}\n")
+        file.write(f"[{timestamp}] {response}\n")
 
 
-def log_timer_start(duration_minutes: float, goal: str = None) -> None:
+def log_timer_start(duration_minutes: float, goal: str | None = None) -> None:
     if not LOG_READY:
         sys.stderr.write(
             f"[berserk-timer witness] Timer started: {duration_minutes:.1f} minutes"
@@ -56,10 +57,10 @@ def log_timer_start(duration_minutes: float, goal: str = None) -> None:
         return
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    with open(filename, "a", encoding="utf-8") as f:
+    with open(filename, "a", encoding="utf-8") as file:
         timestamp = datetime.now().strftime("%H:%M:%S")
         goal_str = f" (Goal: {goal})" if goal else ""
-        f.write(
+        file.write(
             f"[{timestamp}] Timer started: {duration_minutes:.1f} minutes{goal_str}\n"
         )
 
@@ -70,9 +71,9 @@ def log_timer_end() -> None:
         return
     date_str = datetime.now().strftime("%Y-%m-%d")
     filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    with open(filename, "a", encoding="utf-8") as f:
+    with open(filename, "a", encoding="utf-8") as file:
         timestamp = datetime.now().strftime("%H:%M:%S")
-        f.write(f"[{timestamp}] Timer completed\n")
+        file.write(f"[{timestamp}] Timer completed\n")
 
 
 def view_today_log() -> str:
@@ -83,8 +84,8 @@ def view_today_log() -> str:
     if not os.path.exists(filename):
         return "No log for today."
 
-    with open(filename, "r", encoding="utf-8") as f:
-        content = f.read()
+    with open(filename, encoding="utf-8") as file:
+        content = file.read()
 
     header = f"=== Witness Log for {date_str} ==="
     return f"{header}\n{content}"
@@ -100,8 +101,8 @@ def delete_today_log() -> None:
         try:
             os.remove(filename)
             print(f"Today's witness log deleted: {filename}")
-        except Exception as e:
-            print(f"Error deleting today's log {filename}: {e}")
+        except Exception as exc:
+            print(f"Error deleting today's log {filename}: {exc}")
     else:
         print("No log for today to delete.")
 
@@ -115,13 +116,13 @@ def delete_all_logs() -> None:
         if os.path.exists(file):
             try:
                 os.remove(file)
-            except Exception as e:
-                print(f"Error deleting file {file}: {e}")
+            except Exception as exc:
+                print(f"Error deleting file {file}: {exc}")
 
 
 _sound_playing = False
-_sound_start_time = 0
-_sound_duration = 0
+_sound_start_time = 0.0
+_sound_duration = 0.0
 _sound_name = ""
 _global_mute = False
 
@@ -133,10 +134,9 @@ def get_sound_duration(sound_path: str) -> float:
         with wave.open(sound_path, "r") as wav_file:
             frames = wav_file.getnframes()
             rate = wav_file.getframerate()
-            duration = frames / float(rate)
-            return duration
+            return frames / float(rate)
     except Exception:
-        return 0
+        return 0.0
 
 
 def is_sound_playing() -> bool:
@@ -147,15 +147,15 @@ def is_globally_muted() -> bool:
     return _global_mute
 
 
-def get_sound_remaining() -> tuple:
-    global _sound_playing, _sound_start_time, _sound_duration, _sound_name
+def get_sound_remaining() -> tuple[int, int, str]:
+    global _sound_playing
     if not _sound_playing:
         return (0, 0, "")
 
     import time
 
-    elapsed = time.time() - _sound_start_time
-    remaining = max(0, _sound_duration - elapsed)
+    elapsed = time.monotonic() - _sound_start_time
+    remaining = max(0.0, _sound_duration - elapsed)
 
     if remaining <= 0:
         _sound_playing = False
@@ -163,17 +163,12 @@ def get_sound_remaining() -> tuple:
     return (int(remaining), int(_sound_duration), _sound_name)
 
 
-def get_available_sounds() -> list:
-    assets_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
-    assets_dir = os.path.abspath(assets_dir)
+def get_available_sounds() -> list[str]:
+    assets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
     if not os.path.exists(assets_dir):
         return []
 
-    sound_files = []
-    for file in os.listdir(assets_dir):
-        if file.endswith(".wav"):
-            sound_files.append(file)
-    return sorted(sound_files)
+    return sorted(file for file in os.listdir(assets_dir) if file.endswith(".wav"))
 
 
 def get_sound_path(sound_filename: str) -> str:
@@ -182,14 +177,14 @@ def get_sound_path(sound_filename: str) -> str:
 
 
 def play_sound(
-    sound_filename: str = "alert1.wav", volume: int = 5, duration: Optional[int] = None
+    sound_filename: str = "alert1.wav", volume: int = 5, duration: int | None = None
 ) -> None:
     import threading
     import time
 
     global _sound_playing, _sound_start_time, _sound_duration, _sound_name
 
-    if _global_mute or not LOG_READY:
+    if _global_mute:
         return
 
     asset_path = get_sound_path(sound_filename)
@@ -199,21 +194,19 @@ def play_sound(
         return
 
     file_duration = get_sound_duration(asset_path)
-    actual_duration = duration if duration else file_duration
+    actual_duration = float(duration) if duration is not None else file_duration
 
     _sound_playing = True
-    _sound_start_time = time.time()
+    _sound_start_time = time.monotonic()
     _sound_duration = actual_duration
     _sound_name = sound_filename
 
-    volume_percent = volume * 10
+    volume_percent = max(0, min(10, volume)) * 10
 
-    def play_thread():
+    def play_thread() -> None:
         if sys.platform.startswith("win"):
             try:
                 try:
-                    import os
-
                     os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
                     import pygame
 
@@ -221,26 +214,23 @@ def play_sound(
                     pygame.mixer.music.set_volume(volume_percent / 100)
                     pygame.mixer.music.load(asset_path)
                     pygame.mixer.music.play()
-                    if duration:
-                        time_module = __import__("time")
-                        time_module.sleep(duration)
+                    if duration is not None:
+                        time.sleep(duration)
                         pygame.mixer.music.stop()
                     else:
                         while pygame.mixer.music.get_busy():
-                            time_module = __import__("time")
-                            time_module.sleep(0.1)
+                            time.sleep(0.1)
                 except ImportError:
                     import winsound
 
                     winsound.PlaySound(
                         asset_path, winsound.SND_FILENAME | winsound.SND_ASYNC
                     )
-                    if duration:
-                        time_module = __import__("time")
-                        time_module.sleep(duration)
+                    if duration is not None:
+                        time.sleep(duration)
                         winsound.PlaySound(None, winsound.SND_PURGE)
-            except Exception as e:
-                print(f"Error playing sound on Windows: {e}")
+            except Exception as exc:
+                print(f"Error playing sound on Windows: {exc}")
                 print("\a", end="", flush=True)
         elif sys.platform.startswith("linux"):
             try:
@@ -250,20 +240,18 @@ def play_sound(
                     stderr=subprocess.DEVNULL,
                 )
                 cmd = ["aplay", "-q", asset_path]
-                if duration:
-                    cmd = ["timeout", str(duration)] + cmd
+                if duration is not None:
+                    cmd = ["timeout", str(duration), *cmd]
                 subprocess.run(
                     cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
                 )
-            except Exception as e:
-                print(f"Error playing sound on Linux: {e}")
+            except Exception as exc:
+                print(f"Error playing sound on Linux: {exc}")
                 print("\a", end="", flush=True)
         elif sys.platform.startswith("darwin"):
             try:
                 cmd = ["afplay", "-v", str(volume_percent / 100), asset_path]
-                if duration:
-                    import signal
-
+                if duration is not None:
                     proc = subprocess.Popen(
                         cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
                     )
@@ -276,8 +264,8 @@ def play_sound(
                     subprocess.run(
                         cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
                     )
-            except Exception as e:
-                print(f"Error playing sound on macOS: {e}")
+            except Exception as exc:
+                print(f"Error playing sound on macOS: {exc}")
                 print("\a", end="", flush=True)
         else:
             print("\a", end="", flush=True)
@@ -285,8 +273,7 @@ def play_sound(
         global _sound_playing
         _sound_playing = False
 
-    thread = threading.Thread(target=play_thread, daemon=True)
-    thread.start()
+    threading.Thread(target=play_thread, daemon=True).start()
 
 
 def stop_sound() -> None:
@@ -298,7 +285,7 @@ def stop_sound() -> None:
 
                 if pygame.mixer.get_init():
                     pygame.mixer.music.stop()
-            except (ImportError, pygame.error):
+            except ImportError:
                 import winsound
 
                 winsound.PlaySound(None, winsound.SND_PURGE)
