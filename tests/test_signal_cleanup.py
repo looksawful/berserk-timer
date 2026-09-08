@@ -1,5 +1,3 @@
-import pytest
-
 import src.main as main
 
 
