@@ -1,6 +1,37 @@
 # Changelog
 
-All notable changes to Berserk Timer will be documented in this file.
+All notable changes to Berserk Timer are documented here.
+
+## Unreleased
+
+### Fixed
+- Launchers now forward user arguments unchanged and no longer inject a duration or witness mode.
+- Windows launcher no longer depends on a machine-specific Python path.
+- Repeated `Timer.start()` calls no longer create duplicate countdown threads.
+- Timer duration accounting now uses a monotonic clock and is not affected by wall-clock jumps.
+- Unknown CLI arguments are rejected instead of silently ignored.
+- Explicit zero duration is validated as invalid instead of falling through to interactive mode.
+- Windows `/h` and `/?` help aliases continue to work with strict argument parsing.
+- Audio playback no longer depends on writable log files.
+- Linux/macOS audio cleanup no longer uses system-wide `killall`, and Linux playback no longer changes the system master volume.
+- Terminal cleanup resets the screen-manager singleton for clean repeated runs in the same process.
+- Partial `config.json` files inherit required defaults without overwriting valid user values.
+- Runtime author/repository attribution points to `looksawful/berserk-timer`.
+
+### Changed
+- Audio playback and process ownership moved into `src/audio.py`; logging/persistence remains in `src/logger.py`.
+- Packaging now uses `pyproject.toml` with an installable `berserk` console command.
+- Runtime dependencies are separated from development/test dependencies.
+- The ineffective virtual-environment bootstrap `setup.py` was removed.
+- CI now includes Python 3.10/3.11/3.12 Linux tests, Windows Python 3.12 tests, install/entrypoint smoke tests, Ruff, MyPy and dependency auditing.
+- GitHub Actions checkout/setup-python were updated to their current major versions.
+- README and development documentation were reconciled with the implemented runtime and controls.
+
+### Security / Safety
+- `pip-audit` reports no known vulnerabilities in the current runtime dependency set at the time of this audit.
+- Audio fallback processes are tracked and only processes started by Berserk Timer are terminated.
+
+---
 
 ## [0.2.1-beta] - 2025-12-10
 
@@ -19,11 +50,11 @@ All notable changes to Berserk Timer will be documented in this file.
 ## [0.2.0-beta] - 2025-12-09
 
 ### Highlights
-- New threaded core with drift compensation and event bus for responsive controls.
+- Introduced the threaded `Timer` runtime used by the CLI.
 - Witness Mode asks for activity notes and logs to `logs/witness_log_YYYY-MM-DD.txt`.
 - Volume control with multiple alert sounds (`alert1-5.wav`), mute toggle, and on-the-fly restart/zero.
 - Configurable presets via `config.json`; compact/`NO_COLOR` support for narrow or monochrome terminals.
-- Graceful shutdown (Ctrl+C stops audio cleanly).
+- Graceful shutdown behavior for terminal/audio cleanup.
 
 ---
 
