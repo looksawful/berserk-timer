@@ -11,6 +11,8 @@ _sound_duration = 0.0
 _sound_name = ""
 _global_mute = False
 _sound_process: subprocess.Popen[bytes] | None = None
+_playback_generation = 0
+_state_lock = threading.Lock()
 
 
 def get_sound_duration(sound_path: str) -> float:
@@ -26,24 +28,25 @@ def get_sound_duration(sound_path: str) -> float:
 
 
 def is_sound_playing() -> bool:
-    return _sound_playing
+    with _state_lock:
+        return _sound_playing
 
 
 def is_globally_muted() -> bool:
-    return _global_mute
+    with _state_lock:
+        return _global_mute
 
 
 def get_sound_remaining() -> tuple[int, int, str]:
     global _sound_playing
-    if not _sound_playing:
-        return (0, 0, "")
-
-    elapsed = time.monotonic() - _sound_start_time
-    remaining = max(0.0, _sound_duration - elapsed)
-    if remaining <= 0:
-        _sound_playing = False
-
-    return (int(remaining), int(_sound_duration), _sound_name)
+    with _state_lock:
+        if not _sound_playing:
+            return (0, 0, "")
+        elapsed = time.monotonic() - _sound_start_time
+        remaining = max(0.0, _sound_duration - elapsed)
+        if remaining <= 0:
+            _sound_playing = False
+        return (int(remaining), int(_sound_duration), _sound_name)
 
 
 def _source_assets_dir() -> Path:
@@ -89,7 +92,11 @@ def _play_with_pygame(asset_path: str, volume: float, duration: int | None) -> b
         return False
 
 
-def _play_native(asset_path: str, volume: float, duration: int | None) -> None:
+def _play_native(
+    asset_path: str,
+    volume: float,
+    duration: int | None,
+) -> None:
     global _sound_process
 
     if sys.platform.startswith("win"):
@@ -113,25 +120,30 @@ def _play_native(asset_path: str, volume: float, duration: int | None) -> None:
         print("\a", end="", flush=True)
         return
 
+    process: subprocess.Popen[bytes] | None = None
     try:
-        _sound_process = subprocess.Popen(
+        process = subprocess.Popen(
             command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+        with _state_lock:
+            _sound_process = process
         if duration is None:
-            _sound_process.wait()
+            process.wait()
         else:
             try:
-                _sound_process.wait(timeout=duration)
+                process.wait(timeout=duration)
             except subprocess.TimeoutExpired:
-                _terminate_owned_process()
+                _terminate_process(process)
     except (OSError, subprocess.SubprocessError) as exc:
         platform_name = "Linux" if sys.platform.startswith("linux") else "macOS"
         print(f"Error playing sound on {platform_name}: {exc}")
         print("\a", end="", flush=True)
     finally:
-        _sound_process = None
+        with _state_lock:
+            if _sound_process is process:
+                _sound_process = None
 
 
 def play_sound(
@@ -140,9 +152,13 @@ def play_sound(
     duration: int | None = None,
 ) -> None:
     global _sound_playing, _sound_start_time, _sound_duration, _sound_name
+    global _playback_generation
 
-    if _global_mute:
+    if is_globally_muted():
         return
+
+    if is_sound_playing():
+        stop_sound()
 
     asset_path = get_sound_path(sound_filename)
     if not os.path.exists(asset_path):
@@ -154,10 +170,13 @@ def play_sound(
     actual_duration = float(duration) if duration is not None else file_duration
     normalized_volume = max(0, min(10, volume)) / 10
 
-    _sound_playing = True
-    _sound_start_time = time.monotonic()
-    _sound_duration = actual_duration
-    _sound_name = sound_filename
+    with _state_lock:
+        _playback_generation += 1
+        generation = _playback_generation
+        _sound_playing = True
+        _sound_start_time = time.monotonic()
+        _sound_duration = actual_duration
+        _sound_name = sound_filename
 
     def play_thread() -> None:
         global _sound_playing
@@ -165,17 +184,16 @@ def play_sound(
             if not _play_with_pygame(asset_path, normalized_volume, duration):
                 _play_native(asset_path, normalized_volume, duration)
         finally:
-            _sound_playing = False
+            with _state_lock:
+                if generation == _playback_generation:
+                    _sound_playing = False
 
     threading.Thread(target=play_thread, daemon=True).start()
 
 
-def _terminate_owned_process() -> None:
-    global _sound_process
-    process = _sound_process
-    if process is None or process.poll() is not None:
+def _terminate_process(process: subprocess.Popen[bytes]) -> None:
+    if process.poll() is not None:
         return
-
     process.terminate()
     try:
         process.wait(timeout=1)
@@ -184,8 +202,19 @@ def _terminate_owned_process() -> None:
         process.wait(timeout=1)
 
 
+def _terminate_owned_process() -> None:
+    with _state_lock:
+        process = _sound_process
+    if process is not None:
+        _terminate_process(process)
+
+
 def stop_sound() -> None:
-    global _sound_playing
+    global _sound_playing, _playback_generation
+
+    with _state_lock:
+        _playback_generation += 1
+        _sound_playing = False
 
     try:
         import pygame
@@ -207,12 +236,12 @@ def stop_sound() -> None:
         _terminate_owned_process()
     except (OSError, subprocess.SubprocessError):
         pass
-    finally:
-        _sound_playing = False
 
 
 def set_mute(mute: bool) -> None:
     global _global_mute
-    _global_mute = bool(mute)
-    if _global_mute and is_sound_playing():
+    with _state_lock:
+        _global_mute = bool(mute)
+        should_stop = _global_mute and _sound_playing
+    if should_stop:
         stop_sound()
