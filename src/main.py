@@ -14,6 +14,19 @@ from .session import run_timer_loop as run_timer_loop
 from .version import __version__
 
 
+def configure_stdout_encoding() -> None:
+    """Use UTF-8 on Windows without replacing or detaching the host stream."""
+    if not sys.platform.startswith("win"):
+        return
+
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if callable(reconfigure):
+        try:
+            reconfigure(encoding="utf-8")
+        except (OSError, ValueError, AttributeError):
+            pass
+
+
 def show_help() -> None:
     print(ASCII_LOGO)
     print(
@@ -122,10 +135,7 @@ def calculate_duration(args: argparse.Namespace, config: dict) -> float | None:
 
 
 def main() -> None:
-    if sys.platform.startswith("win"):
-        import codecs
-
-        sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+    configure_stdout_encoding()
 
     args = parse_arguments()
 
