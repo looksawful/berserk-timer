@@ -50,11 +50,12 @@ class Timer:
             raise TimerDurationError(f"Duration cannot exceed {hours} hours")
 
     def start(self) -> None:
-        if not self.is_running():
-            with self._lock:
-                self.remaining = self.duration
-                self._paused = False
-                self._zeroed = False
+        if self.is_running():
+            return
+        with self._lock:
+            self.remaining = self.duration
+            self._paused = False
+            self._zeroed = False
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._run)
         self._thread.start()
