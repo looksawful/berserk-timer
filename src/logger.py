@@ -4,6 +4,17 @@ import os
 import sys
 from datetime import datetime
 
+from .audio import (
+    get_available_sounds,
+    get_sound_duration,
+    get_sound_path,
+    is_globally_muted,
+    is_sound_playing,
+    play_sound,
+    set_mute,
+    stop_sound,
+)
+
 LOG_DIR = "logs"
 LOG_READY = True
 
@@ -107,9 +118,10 @@ def delete_today_log() -> None:
 
 def delete_all_logs() -> None:
     logging.shutdown()
-    files = [os.path.join(LOG_DIR, "berserk.log"), *glob.glob(
-        os.path.join(LOG_DIR, "witness_log_*.txt")
-    )]
+    files = [
+        os.path.join(LOG_DIR, "berserk.log"),
+        *glob.glob(os.path.join(LOG_DIR, "witness_log_*.txt")),
+    ]
     for file in files:
         if os.path.exists(file):
             try:
