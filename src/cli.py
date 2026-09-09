@@ -3,7 +3,7 @@ import shutil
 import sys
 import threading
 import time
-from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING
 
 from rich.console import Console
 
@@ -15,6 +15,7 @@ from .audio import (
     play_sound,
     stop_sound,
 )
+from .commands import CommandDispatcher
 from .constants import MAX_TIMER_SECONDS
 from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
@@ -434,20 +435,22 @@ def run_cli_timer(timer: "Timer") -> bool:
             stop_sound()
         suspend_display.clear()
 
-    commands: Dict[str, Callable[[], None]] = {
-        "p": toggle_pause_action,
-        "q": stop_action,
-        "x": zero_action,
-        "r": restart_action,
-        "v": view_log_action,
-        "d": delete_logs_action,
-        "u": update_duration_action,
-        "g": set_goal_action,
-        "m": set_mute_action,
-        "s": change_sound_action,
-        "k": stop_sound_action,
-        "h": show_help_action,
-    }
+    dispatcher = CommandDispatcher(
+        {
+            "p": toggle_pause_action,
+            "q": stop_action,
+            "x": zero_action,
+            "r": restart_action,
+            "v": view_log_action,
+            "d": delete_logs_action,
+            "u": update_duration_action,
+            "g": set_goal_action,
+            "m": set_mute_action,
+            "s": change_sound_action,
+            "k": stop_sound_action,
+            "h": show_help_action,
+        }
+    )
 
     def keyboard_listener() -> None:
         while (
@@ -487,8 +490,7 @@ def run_cli_timer(timer: "Timer") -> bool:
                     continue
 
                 key = key.lower()
-                if key in commands:
-                    commands[key]()
+                if dispatcher.dispatch(key):
                     if key == "q" and exit_flag.is_set():
                         break
             time.sleep(KEY_POLL_INTERVAL)
