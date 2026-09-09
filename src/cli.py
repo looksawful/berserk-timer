@@ -15,6 +15,7 @@ from .audio import (
     play_sound,
     stop_sound,
 )
+from .commands import dispatch_command
 from .constants import MAX_TIMER_SECONDS
 from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
@@ -497,10 +498,8 @@ def run_cli_timer(timer: "Timer") -> bool:
                 if ord(key[0]) < 32:
                     continue
 
-                key = key.lower()
-                if key in commands:
-                    commands[key]()
-                    if key == "q" and exit_flag.is_set():
+                if dispatch_command(key, commands):
+                    if key.lower() == "q" and exit_flag.is_set():
                         break
             time.sleep(KEY_POLL_INTERVAL)
 
