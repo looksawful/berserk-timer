@@ -8,17 +8,17 @@ from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
 from rich.console import Console
 
 from .ascii_art import ASCII_BYE, ASCII_HELP, ASCII_SETTINGS, ASCII_FINISHED, ASCII_WITNESS_LOG
-from .constants import MAX_TIMER_SECONDS
-from .logger import (
-    delete_today_log,
+from .audio import (
     get_available_sounds,
     is_globally_muted,
     is_sound_playing,
     play_sound,
     stop_sound,
-    view_today_log,
 )
+from .constants import MAX_TIMER_SECONDS
+from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
+from .timer import TimerDurationError, validate_duration_seconds
 
 if TYPE_CHECKING:
     from .timer import Timer
@@ -33,18 +33,14 @@ VOLUME_LOW_THRESHOLD = 3
 VOLUME_MID_THRESHOLD = 6
 VOLUME_HIGH_THRESHOLD = 8
 MAX_VOLUME = 10
-MIN_DURATION_SECONDS = 1
 MAX_DURATION_MINUTES = MAX_TIMER_SECONDS / 60
 
 
 def validate_duration(seconds: float) -> Tuple[bool, str]:
-    if seconds <= 0:
-        return False, "Duration must be positive"
-    if seconds < MIN_DURATION_SECONDS:
-        return False, f"Duration must be at least {MIN_DURATION_SECONDS} second(s)"
-    if seconds > MAX_TIMER_SECONDS:
-        hours = MAX_TIMER_SECONDS // 3600
-        return False, f"Duration cannot exceed {hours} hours"
+    try:
+        validate_duration_seconds(seconds)
+    except TimerDurationError as exc:
+        return False, str(exc)
     return True, ""
 
 
@@ -537,7 +533,6 @@ def run_cli_timer(timer: "Timer") -> bool:
     stop_listener_event.set()
     if listener.is_alive():
         listener.join(timeout=1.0)
-
     return exit_flag.is_set()
 
 
