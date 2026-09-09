@@ -3,16 +3,45 @@ import logging
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from . import audio as _audio
 
-LOG_DIR = "logs"
+
+def get_default_log_dir() -> Path:
+    override = os.environ.get("BERSERK_LOG_DIR")
+    if override:
+        return Path(override)
+
+    if sys.platform.startswith("win"):
+        base = Path(
+            os.environ.get("LOCALAPPDATA")
+            or os.environ.get("APPDATA")
+            or Path.home() / "AppData" / "Local"
+        )
+        return base / "Berserk Timer" / "logs"
+
+    if sys.platform.startswith("darwin"):
+        return (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Berserk Timer"
+            / "logs"
+        )
+
+    xdg_state_home = os.environ.get("XDG_STATE_HOME")
+    base = Path(xdg_state_home) if xdg_state_home else Path.home() / ".local" / "state"
+    return base / "berserk-timer" / "logs"
+
+
+LOG_DIR = get_default_log_dir()
 LOG_READY = True
 
 try:
-    os.makedirs(LOG_DIR, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
-        filename=os.path.join(LOG_DIR, "berserk.log"),
+        filename=str(LOG_DIR / "berserk.log"),
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
@@ -36,13 +65,17 @@ def log_event(message: str) -> None:
         sys.stderr.write(f"[berserk-timer] {message}\n")
 
 
+def _today_witness_log_path() -> Path:
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    return LOG_DIR / f"witness_log_{date_str}.txt"
+
+
 def log_witness_response(response: str) -> None:
     if not LOG_READY:
         sys.stderr.write(f"[berserk-timer witness] {response}\n")
         return
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    with open(filename, "a", encoding="utf-8") as file:
+    filename = _today_witness_log_path()
+    with filename.open("a", encoding="utf-8") as file:
         timestamp = datetime.now().strftime("%H:%M:%S")
         file.write(f"[{timestamp}] {response}\n")
 
@@ -55,9 +88,8 @@ def log_timer_start(duration_minutes: float, goal: str | None = None) -> None:
             + "\n"
         )
         return
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    with open(filename, "a", encoding="utf-8") as file:
+    filename = _today_witness_log_path()
+    with filename.open("a", encoding="utf-8") as file:
         timestamp = datetime.now().strftime("%H:%M:%S")
         goal_str = f" (Goal: {goal})" if goal else ""
         file.write(
@@ -69,9 +101,8 @@ def log_timer_end() -> None:
     if not LOG_READY:
         sys.stderr.write("[berserk-timer witness] Timer completed\n")
         return
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    with open(filename, "a", encoding="utf-8") as file:
+    filename = _today_witness_log_path()
+    with filename.open("a", encoding="utf-8") as file:
         timestamp = datetime.now().strftime("%H:%M:%S")
         file.write(f"[{timestamp}] Timer completed\n")
 
@@ -80,11 +111,11 @@ def view_today_log() -> str:
     if not LOG_READY:
         return "Logging is unavailable (read-only fallback active)."
     date_str = datetime.now().strftime("%Y-%m-%d")
-    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    if not os.path.exists(filename):
+    filename = _today_witness_log_path()
+    if not filename.exists():
         return "No log for today."
 
-    with open(filename, encoding="utf-8") as file:
+    with filename.open(encoding="utf-8") as file:
         content = file.read()
 
     header = f"=== Witness Log for {date_str} ==="
@@ -95,11 +126,10 @@ def delete_today_log() -> None:
     if not LOG_READY:
         print("Logging unavailable; no files to delete.")
         return
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    filename = os.path.join(LOG_DIR, f"witness_log_{date_str}.txt")
-    if os.path.exists(filename):
+    filename = _today_witness_log_path()
+    if filename.exists():
         try:
-            os.remove(filename)
+            filename.unlink()
             print(f"Today's witness log deleted: {filename}")
         except OSError as exc:
             print(f"Error deleting today's log {filename}: {exc}")
@@ -110,8 +140,8 @@ def delete_today_log() -> None:
 def delete_all_logs() -> None:
     logging.shutdown()
     files = [
-        os.path.join(LOG_DIR, "berserk.log"),
-        *glob.glob(os.path.join(LOG_DIR, "witness_log_*.txt")),
+        str(LOG_DIR / "berserk.log"),
+        *glob.glob(str(LOG_DIR / "witness_log_*.txt")),
     ]
     for file in files:
         if os.path.exists(file):
