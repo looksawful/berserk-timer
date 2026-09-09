@@ -26,6 +26,7 @@ All notable changes to Berserk Timer are documented here.
 ### Changed
 - Audio playback and process ownership live in `src/audio.py`; CLI audio actions now import that module directly and `src.logger` is persistence-only.
 - Timer duration validation has one domain owner in `src.timer`; CLI/session layers only present domain validation errors.
+- Raw keyboard polling now delegates command selection to a testable `CommandDispatcher`, preserving all existing timer shortcuts while allowing routing tests without a real terminal.
 - Packaging now uses `pyproject.toml` with an installable `berserk` console command.
 - Runtime dependencies are separated from development/test dependencies.
 - The ineffective virtual-environment bootstrap `setup.py` was removed.
