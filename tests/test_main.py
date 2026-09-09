@@ -1,4 +1,5 @@
 import argparse
+import math
 
 import pytest
 
@@ -41,6 +42,12 @@ def test_calculate_duration_rejects_out_of_range_value(capsys):
     with pytest.raises(SystemExit):
         main.calculate_duration(_args(duration=0), {"presets": {}})
     assert "Duration must be positive" in capsys.readouterr().out
+
+
+def test_calculate_duration_rejects_nan(capsys):
+    with pytest.raises(SystemExit):
+        main.calculate_duration(_args(duration=math.nan), {"presets": {}})
+    assert "finite" in capsys.readouterr().out
 
 
 def test_windows_stdout_configuration_reconfigures_without_detaching(monkeypatch):

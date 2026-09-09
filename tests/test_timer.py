@@ -1,8 +1,10 @@
 """Unit tests for Timer class."""
 
+import math
 import unittest
 import time
-from src.timer import Timer
+
+from src.timer import Timer, TimerDurationError
 
 
 class TestTimer(unittest.TestCase):
@@ -17,6 +19,16 @@ class TestTimer(unittest.TestCase):
         """Test timer initializes correctly with goal."""
         timer = Timer(duration=120.0, goal="Write tests")
         self.assertEqual(timer.goal, "Write tests")
+
+    def test_timer_rejects_nan_duration(self):
+        with self.assertRaisesRegex(TimerDurationError, "finite"):
+            Timer(duration=math.nan)
+
+    def test_timer_rejects_nan_duration_update(self):
+        timer = Timer(duration=10.0)
+
+        with self.assertRaisesRegex(TimerDurationError, "finite"):
+            timer.update_duration(math.nan)
 
     def test_timer_countdown(self):
         """Test timer countdown reduces remaining time."""

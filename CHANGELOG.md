@@ -9,6 +9,7 @@ All notable changes to Berserk Timer are documented here.
 - Windows launcher no longer depends on a machine-specific Python path.
 - Repeated `Timer.start()` calls no longer create duplicate countdown threads.
 - Timer duration accounting now uses a monotonic clock and is not affected by wall-clock jumps.
+- Non-finite timer durations such as `NaN` are rejected consistently by startup, restart and in-session duration changes.
 - Unknown CLI arguments are rejected instead of silently ignored.
 - Explicit zero duration is validated as invalid instead of falling through to interactive mode.
 - Windows `/h` and `/?` help aliases continue to work with strict argument parsing.
@@ -23,7 +24,8 @@ All notable changes to Berserk Timer are documented here.
 - Runtime author/repository attribution points to `looksawful/berserk-timer`.
 
 ### Changed
-- Audio playback and process ownership moved into `src/audio.py`; logging/persistence remains in `src/logger.py`.
+- Audio playback and process ownership live in `src/audio.py`; CLI audio actions now import that module directly and `src.logger` is persistence-only.
+- Timer duration validation has one domain owner in `src.timer`; CLI/session layers only present domain validation errors.
 - Packaging now uses `pyproject.toml` with an installable `berserk` console command.
 - Runtime dependencies are separated from development/test dependencies.
 - The ineffective virtual-environment bootstrap `setup.py` was removed.

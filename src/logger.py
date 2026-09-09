@@ -5,8 +5,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from . import audio as _audio
-
 
 def get_default_log_dir() -> Path:
     override = os.environ.get("BERSERK_LOG_DIR")
@@ -149,38 +147,3 @@ def delete_all_logs() -> None:
                 os.remove(file)
             except OSError as exc:
                 print(f"Error deleting file {file}: {exc}")
-
-
-# Compatibility wrappers while older CLI imports are migrated to src.audio.
-def get_available_sounds() -> list[str]:
-    return _audio.get_available_sounds()
-
-
-def get_sound_duration(sound_path: str) -> float:
-    return _audio.get_sound_duration(sound_path)
-
-
-def get_sound_path(sound_filename: str) -> str:
-    return _audio.get_sound_path(sound_filename)
-
-
-def is_globally_muted() -> bool:
-    return _audio.is_globally_muted()
-
-
-def is_sound_playing() -> bool:
-    return _audio.is_sound_playing()
-
-
-def play_sound(
-    sound_filename: str = "alert1.wav", volume: int = 5, duration: int | None = None
-) -> None:
-    _audio.play_sound(sound_filename, volume, duration)
-
-
-def set_mute(mute: bool) -> None:
-    _audio.set_mute(mute)
-
-
-def stop_sound() -> None:
-    _audio.stop_sound()

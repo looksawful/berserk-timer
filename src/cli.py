@@ -8,17 +8,17 @@ from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
 from rich.console import Console
 
 from .ascii_art import ASCII_BYE, ASCII_HELP, ASCII_SETTINGS, ASCII_FINISHED, ASCII_WITNESS_LOG
-from .constants import MAX_TIMER_SECONDS
-from .logger import (
-    delete_today_log,
+from .audio import (
     get_available_sounds,
     is_globally_muted,
     is_sound_playing,
     play_sound,
     stop_sound,
-    view_today_log,
 )
+from .constants import MAX_TIMER_SECONDS
+from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
+from .timer import TimerDurationError
 
 if TYPE_CHECKING:
     from .timer import Timer
@@ -33,19 +33,7 @@ VOLUME_LOW_THRESHOLD = 3
 VOLUME_MID_THRESHOLD = 6
 VOLUME_HIGH_THRESHOLD = 8
 MAX_VOLUME = 10
-MIN_DURATION_SECONDS = 1
 MAX_DURATION_MINUTES = MAX_TIMER_SECONDS / 60
-
-
-def validate_duration(seconds: float) -> Tuple[bool, str]:
-    if seconds <= 0:
-        return False, "Duration must be positive"
-    if seconds < MIN_DURATION_SECONDS:
-        return False, f"Duration must be at least {MIN_DURATION_SECONDS} second(s)"
-    if seconds > MAX_TIMER_SECONDS:
-        hours = MAX_TIMER_SECONDS // 3600
-        return False, f"Duration cannot exceed {hours} hours"
-    return True, ""
 
 
 def safe_terminal_width(default: int = 80) -> int:
@@ -244,18 +232,15 @@ def run_cli_timer(timer: "Timer") -> bool:
             new_duration_minutes = float(user_input)
             new_duration_seconds = new_duration_minutes * 60
 
-            is_valid, error_msg = validate_duration(new_duration_seconds)
-            if not is_valid:
-                console.print(f"[red]Error: {error_msg}[/red]")
-                time.sleep(2)
-                redraw_command_hints()
-                return
-
             timer.update_duration(new_duration_seconds)
             console.print(
                 f"[green]Duration updated to {new_duration_minutes:.1f} minutes[/green]"
             )
             time.sleep(1)
+            redraw_command_hints()
+        except TimerDurationError as exc:
+            console.print(f"[red]Error: {exc}[/red]")
+            time.sleep(2)
             redraw_command_hints()
         except ValueError:
             console.print("[red]Invalid input. Please enter a number.[/red]")

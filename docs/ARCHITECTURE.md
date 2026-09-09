@@ -23,7 +23,7 @@ brsrk.bat / brsrk.sh / berserk
      |          |         |
      |          |         +-- pygame / owned native fallback process
      |          +------------ Rich / keyboard / screen interaction
-     +----------------------- monotonic timer state
+     +----------------------- monotonic timer state + duration rules
 
 src.logger          system + witness persistence
 src.config_manager  user-scoped configuration + migration
@@ -34,7 +34,9 @@ src.screen_manager  terminal screen lifecycle
 
 ### `src.timer`
 
-Owns duration validation and timer state. Elapsed duration uses `time.monotonic()`, so wall-clock corrections cannot change countdown semantics. The timer does not import Rich, pygame, terminal input or configuration code.
+Owns the single authoritative duration validation function and timer state. All startup, restart and in-session duration changes use the same domain rules. Durations must be finite, positive, at least one second and no longer than `MAX_TIMER_SECONDS`.
+
+Elapsed duration uses `time.monotonic()`, so wall-clock corrections cannot change countdown semantics. The timer does not import Rich, pygame, terminal input or configuration code.
 
 Repeated `start()` calls while a timer is already running are idempotent and cannot create competing countdown threads.
 
@@ -44,7 +46,7 @@ Owns the application workflow after initial input: creating a timer, running the
 
 ### `src.cli`
 
-Owns terminal rendering, keyboard input and interactive commands. Platform keyboard paths remain adapter-level concerns here. CLI code may call logging and audio APIs, but timer-domain behavior stays in `Timer`.
+Owns terminal rendering, keyboard input and interactive commands. Platform keyboard paths remain adapter-level concerns here. CLI code calls `src.audio` directly for playback actions and `src.logger` only for persistence actions. Timer-domain behavior, including duration validation, stays in `src.timer`/`Timer`.
 
 ### `src.audio`
 
@@ -61,7 +63,7 @@ Audio invariants:
 
 ### `src.logger`
 
-Owns application logging and witness-log persistence. When the log directory is unavailable it falls back to stderr. Temporary audio compatibility wrappers delegate to `src.audio` for older internal imports; new code should import `src.audio` directly.
+Owns application logging and witness-log persistence only. It does not expose or proxy audio APIs. When the log directory is unavailable it falls back to stderr.
 
 ### `src.config_manager`
 
