@@ -1,5 +1,6 @@
 import copy
 import json
+import math
 import os
 import shutil
 import sys
@@ -65,7 +66,7 @@ def _normalize_presets(value: Any) -> dict[str, float | int]:
             continue
         if isinstance(duration, bool) or not isinstance(duration, (int, float)):
             continue
-        if duration <= 0 or duration > max_minutes:
+        if not math.isfinite(duration) or duration <= 0 or duration > max_minutes:
             continue
         normalized[name] = duration
 
