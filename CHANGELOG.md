@@ -20,10 +20,13 @@ All notable changes to Berserk Timer are documented here.
 - String booleans and individual preset values are normalized explicitly instead of relying on Python truthiness or unchecked values.
 - Repository `config.json` now matches the application's canonical built-in defaults, so source and installed first-run behavior no longer drift.
 - Runtime logs now use a user-scoped state directory instead of the current working directory.
+- Non-finite timer durations such as `NaN` are rejected by the timer domain instead of entering an invalid countdown state.
 - Runtime author/repository attribution points to `looksawful/berserk-timer`.
 
 ### Changed
 - Audio playback and process ownership moved into `src/audio.py`; logging/persistence remains in `src/logger.py`.
+- CLI audio controls now import the audio adapter directly; `src.logger` no longer exposes audio compatibility wrappers.
+- Timer duration validation has one domain owner in `src.timer`; the CLI preserves its existing `(valid, message)` adapter contract.
 - Packaging now uses `pyproject.toml` with an installable `berserk` console command.
 - Runtime dependencies are separated from development/test dependencies.
 - The ineffective virtual-environment bootstrap `setup.py` was removed.
