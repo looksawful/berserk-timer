@@ -16,6 +16,10 @@ All notable changes to Berserk Timer are documented here.
 - Linux/macOS audio cleanup no longer uses system-wide `killall`, and Linux playback no longer changes the system master volume.
 - Terminal cleanup resets the screen-manager singleton for clean repeated runs in the same process.
 - Partial `config.json` files inherit required defaults without overwriting valid user values.
+- Malformed JSON config files recover to canonical defaults instead of crashing startup.
+- String booleans and individual preset values are normalized explicitly instead of relying on Python truthiness or unchecked values.
+- Repository `config.json` now matches the application's canonical built-in defaults, so source and installed first-run behavior no longer drift.
+- Runtime logs now use a user-scoped state directory instead of the current working directory.
 - Runtime author/repository attribution points to `looksawful/berserk-timer`.
 
 ### Changed
