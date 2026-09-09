@@ -69,6 +69,46 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual(loaded["safe_word"], DEFAULT_CONFIG["safe_word"])
         self.assertEqual(loaded["sound_file"], DEFAULT_CONFIG["sound_file"])
 
+    def test_malformed_json_recovers_to_defaults_and_repairs_file(self):
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            f.write('{"messages": ["broken"],')
+
+        loaded = load_config(self.config_path)
+
+        self.assertEqual(loaded, DEFAULT_CONFIG)
+        with open(self.config_path, encoding="utf-8") as f:
+            repaired = json.load(f)
+        self.assertEqual(repaired, DEFAULT_CONFIG)
+
+    def test_witness_mode_string_false_is_parsed_as_false(self):
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump({"witness_mode": "false"}, f)
+
+        loaded = load_config(self.config_path)
+
+        self.assertIs(loaded["witness_mode"], False)
+
+    def test_invalid_preset_values_fall_back_without_discarding_valid_custom_presets(self):
+        dirty = {
+            "presets": {
+                "xs": "five",
+                "s": 0,
+                "m": 15,
+                "custom": 99,
+                "junk": None,
+            }
+        }
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(dirty, f)
+
+        loaded = load_config(self.config_path)
+
+        self.assertEqual(loaded["presets"]["xs"], DEFAULT_CONFIG["presets"]["xs"])
+        self.assertEqual(loaded["presets"]["s"], DEFAULT_CONFIG["presets"]["s"])
+        self.assertEqual(loaded["presets"]["m"], 15)
+        self.assertEqual(loaded["presets"]["custom"], 99)
+        self.assertNotIn("junk", loaded["presets"])
+
 
 if __name__ == "__main__":
     unittest.main()
