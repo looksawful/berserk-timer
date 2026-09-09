@@ -7,6 +7,7 @@ All notable changes to Berserk Timer are documented here.
 ### Fixed
 - Launchers now forward user arguments unchanged and no longer inject a duration or witness mode.
 - Windows launcher no longer depends on a machine-specific Python path.
+- Windows shortcut helper now resolves paths from its own location, references the shipped `assets/icon.ico`, and creates a real `Berserk Timer.lnk` instead of a stale `.url` file.
 - Repeated `Timer.start()` calls no longer create duplicate countdown threads.
 - Timer duration accounting now uses a monotonic clock and is not affected by wall-clock jumps.
 - Unknown CLI arguments are rejected instead of silently ignored.
