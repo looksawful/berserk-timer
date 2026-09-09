@@ -94,6 +94,7 @@ class TestConfigManager(unittest.TestCase):
                 "xs": "five",
                 "s": 0,
                 "m": 15,
+                "xl": float("nan"),
                 "custom": 99,
                 "junk": None,
             }
@@ -106,6 +107,7 @@ class TestConfigManager(unittest.TestCase):
         self.assertEqual(loaded["presets"]["xs"], DEFAULT_CONFIG["presets"]["xs"])
         self.assertEqual(loaded["presets"]["s"], DEFAULT_CONFIG["presets"]["s"])
         self.assertEqual(loaded["presets"]["m"], 15)
+        self.assertEqual(loaded["presets"]["xl"], DEFAULT_CONFIG["presets"]["xl"])
         self.assertEqual(loaded["presets"]["custom"], 99)
         self.assertNotIn("junk", loaded["presets"])
 
