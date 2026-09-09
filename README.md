@@ -122,14 +122,16 @@ Unknown arguments are rejected instead of being silently ignored.
 
 When witness mode is enabled, the timer asks what was accomplished after the session. The default safe word is `skip`.
 
-Logs are written to:
+Logs are user-scoped instead of being written into whichever directory happened to launch `berserk`:
 
 ```text
-logs/berserk.log
-logs/witness_log_YYYY-MM-DD.txt
+Windows: %LOCALAPPDATA%\Berserk Timer\logs
+Linux:   $XDG_STATE_HOME/berserk-timer/logs
+         or ~/.local/state/berserk-timer/logs
+macOS:   ~/Library/Application Support/Berserk Timer/logs
 ```
 
-If the log directory is not writable, regular log messages fall back to stderr. Audio playback is independent from log-file availability.
+`BERSERK_LOG_DIR` can override this location for controlled environments and tests. If the log directory is not writable, regular log messages fall back to stderr. Audio playback is independent from log-file availability.
 
 ## Audio
 
@@ -141,7 +143,9 @@ Available WAV files are discovered from the repository assets directory when run
 
 ## Configuration
 
-`config.json` is loaded with required defaults filled in when older or partial configuration files omit fields. User-provided values are preserved where valid.
+The runtime config lives in the platform-specific user config directory. The repository-level `config.json` is the canonical migration/default file and matches the application's built-in defaults.
+
+Older or partial configuration files are normalized on load. Valid user values are preserved, malformed JSON is repaired back to defaults, string booleans such as `"false"` are parsed explicitly, invalid preset values fall back to safe defaults, and valid custom presets are retained.
 
 Current default shape:
 
@@ -175,7 +179,8 @@ The main runtime boundaries are:
 
 ```text
 src.timer          timer state and duration semantics
-src.main           application/session orchestration
+src.main           startup, argument parsing and dependency composition
+src.session        session orchestration, restart flow and timer completion
 src.cli            terminal interaction and commands
 src.audio          audio playback and owned process lifecycle
 src.logger         system/witness persistence
@@ -197,7 +202,7 @@ CI currently checks:
 - MyPy;
 - `pip-audit` against runtime dependencies.
 
-Regression tests cover launcher argument forwarding, duplicate timer threads, monotonic duration accounting, strict argument parsing, explicit zero-duration validation, partial configuration repair, audio ownership and terminal cleanup.
+Regression tests cover launcher argument forwarding, duplicate timer threads, monotonic duration accounting, strict argument parsing, explicit zero-duration validation, configuration recovery/normalization, user-scoped log storage, audio ownership and terminal cleanup.
 
 ## License
 
