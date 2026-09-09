@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .constants import MAX_TIMER_SECONDS
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "messages": [
         "Drink water",
@@ -46,21 +48,48 @@ def get_legacy_source_config_path() -> Path:
     return Path(__file__).resolve().parent.parent / "config.json"
 
 
-def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
-    path = Path(config_path) if config_path is not None else get_default_config_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
+def _write_config(path: Path, config: dict[str, Any]) -> None:
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(config, file, indent=4)
 
-    if not path.exists():
-        legacy_path = get_legacy_source_config_path() if config_path is None else None
-        if legacy_path is not None and legacy_path.is_file() and legacy_path != path:
-            shutil.copyfile(legacy_path, path)
-        else:
-            with path.open("w", encoding="utf-8") as file:
-                json.dump(DEFAULT_CONFIG, file, indent=4)
 
-    with path.open(encoding="utf-8") as file:
-        loaded = json.load(file)
+def _normalize_presets(value: Any) -> dict[str, float | int]:
+    defaults = copy.deepcopy(DEFAULT_CONFIG["presets"])
+    if not isinstance(value, dict):
+        return defaults
 
+    normalized: dict[str, float | int] = {}
+    max_minutes = MAX_TIMER_SECONDS / 60
+    for name, duration in value.items():
+        if not isinstance(name, str) or not name.strip():
+            continue
+        if isinstance(duration, bool) or not isinstance(duration, (int, float)):
+            continue
+        if duration <= 0 or duration > max_minutes:
+            continue
+        normalized[name] = duration
+
+    for name, duration in defaults.items():
+        normalized.setdefault(name, duration)
+    return normalized
+
+
+def _normalize_bool(value: Any, default: bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "off"}:
+            return False
+        return default
+    if isinstance(value, int) and value in {0, 1}:
+        return bool(value)
+    return default
+
+
+def _normalize_config(loaded: Any) -> dict[str, Any]:
     config = copy.deepcopy(DEFAULT_CONFIG)
     if isinstance(loaded, dict):
         config.update(loaded)
@@ -75,9 +104,7 @@ def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, 
     else:
         config["messages"] = copy.deepcopy(DEFAULT_CONFIG["messages"])
 
-    presets = config.get("presets")
-    if not isinstance(presets, dict):
-        config["presets"] = copy.deepcopy(DEFAULT_CONFIG["presets"])
+    config["presets"] = _normalize_presets(config.get("presets"))
 
     safe_word = config.get("safe_word")
     if not isinstance(safe_word, str) or not safe_word.strip():
@@ -93,7 +120,28 @@ def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, 
     except (ValueError, TypeError):
         config["volume"] = DEFAULT_CONFIG["volume"]
 
-    config["witness_mode"] = bool(
-        config.get("witness_mode", DEFAULT_CONFIG["witness_mode"])
+    config["witness_mode"] = _normalize_bool(
+        config.get("witness_mode"), DEFAULT_CONFIG["witness_mode"]
     )
     return config
+
+
+def load_config(config_path: str | os.PathLike[str] | None = None) -> dict[str, Any]:
+    path = Path(config_path) if config_path is not None else get_default_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not path.exists():
+        legacy_path = get_legacy_source_config_path() if config_path is None else None
+        if legacy_path is not None and legacy_path.is_file() and legacy_path != path:
+            shutil.copyfile(legacy_path, path)
+        else:
+            _write_config(path, DEFAULT_CONFIG)
+
+    try:
+        with path.open(encoding="utf-8") as file:
+            loaded = json.load(file)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        _write_config(path, DEFAULT_CONFIG)
+        return copy.deepcopy(DEFAULT_CONFIG)
+
+    return _normalize_config(loaded)
