@@ -23,6 +23,8 @@ brsrk.bat / brsrk.sh / berserk
      |          |         |
      |          |         +-- pygame / owned native fallback process
      |          +------------ Rich / keyboard / screen interaction
+     |          |
+     |          +--> src.commands -- raw-key-independent command dispatch
      +----------------------- monotonic timer state + duration rules
 
 src.logger          system + witness persistence
@@ -44,9 +46,15 @@ Repeated `start()` calls while a timer is already running are idempotent and can
 
 Owns the application workflow after initial input: creating a timer, running the CLI loop, handling completion, witness collection, restart behavior and repeating alert escalation. This keeps `src.main` from being both the entry point and the complete application service.
 
+### `src.commands`
+
+Owns raw-key-independent command dispatch. It receives a mapping of command keys to zero-argument handlers, normalizes command case, executes known commands and returns whether a command was handled. It has no dependency on Rich, terminal input, audio, persistence or timer state.
+
 ### `src.cli`
 
-Owns terminal rendering, keyboard input and interactive commands. Platform keyboard paths remain adapter-level concerns here. CLI code calls `src.audio` directly for playback actions and `src.logger` only for persistence actions. Timer-domain behavior, including duration validation, stays in `src.timer`/`Timer`.
+Owns terminal rendering, platform keyboard input and the interactive command handlers. Raw `msvcrt`/`termios` polling only produces keys; command selection is delegated to `src.commands.CommandDispatcher`, so shortcut routing can be tested without a real terminal. CLI code calls `src.audio` directly for playback actions and `src.logger` only for persistence actions. Timer-domain behavior, including duration validation, stays in `src.timer`/`Timer`.
+
+The command handlers themselves are still composed inside `run_cli_timer()`. Further extraction should preserve the current shortcuts, text and timing while narrowing those UI/persistence seams rather than introducing a second command model.
 
 ### `src.audio`
 
