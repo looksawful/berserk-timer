@@ -6,9 +6,9 @@ import threading
 import time
 
 from .audio import get_sound_duration, get_sound_path, play_sound, stop_sound
-from .cli import cli_witness_form, run_cli_timer, validate_duration
+from .cli import cli_witness_form, run_cli_timer
 from .logger import log_event, log_timer_end, log_timer_start, log_witness_response
-from .timer import Timer, TimerDurationError
+from .timer import Timer, TimerDurationError, validate_duration
 
 
 def on_timer_end(
@@ -103,9 +103,10 @@ def run_timer_loop(
                 try:
                     duration_minutes = float(user_input)
                     duration = duration_minutes * 60
-                    is_valid, error_msg = validate_duration(duration)
-                    if not is_valid:
-                        print(f"Error: {error_msg}")
+                    try:
+                        validate_duration(duration)
+                    except TimerDurationError as exc:
+                        print(f"Error: {exc}")
                         continue
                     break
                 except ValueError:
