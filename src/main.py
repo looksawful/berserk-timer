@@ -4,13 +4,13 @@ import sys
 
 from .ascii_art import ASCII_LOGO, AUTHOR_SIGNATURE
 from .audio import set_mute
-from .cli import validate_duration
 from .config_manager import get_default_config_path, load_config
 from .constants import MAX_TIMER_SECONDS
 from .logger import log_event
 from .screen_manager import cleanup_screen, init_screen
 from .session import on_timer_end as on_timer_end
 from .session import run_timer_loop as run_timer_loop
+from .timer import TimerDurationError, validate_duration
 from .version import __version__
 
 
@@ -112,9 +112,10 @@ def calculate_duration(args: argparse.Namespace, config: dict) -> float | None:
     if args.duration is not None:
         factor = 1 if args.seconds else 60
         duration = args.duration * factor
-        is_valid, error_msg = validate_duration(duration)
-        if not is_valid:
-            print(f"Error: {error_msg}")
+        try:
+            validate_duration(duration)
+        except TimerDurationError as exc:
+            print(f"Error: {exc}")
             sys.exit(1)
         return duration
 
@@ -225,9 +226,10 @@ def main() -> None:
                 duration_minutes = float(duration_input)
                 duration = duration_minutes * 60
 
-                is_valid, error_msg = validate_duration(duration)
-                if not is_valid:
-                    print(f"Error: {error_msg}")
+                try:
+                    validate_duration(duration)
+                except TimerDurationError as exc:
+                    print(f"Error: {exc}")
                     continue
                 break
             except ValueError:
