@@ -130,7 +130,7 @@ def test_session_restart_duration_interrupt_exits_cleanly(monkeypatch) -> None:
         try:
             return next(answers)
         except StopIteration:
-            raise KeyboardInterrupt
+            raise KeyboardInterrupt from None
 
     monkeypatch.setattr("builtins.input", interrupted_input)
 
@@ -152,7 +152,7 @@ def test_witness_skip_confirmation_interrupt_skips_and_stops_alert(monkeypatch) 
         try:
             return next(answers)
         except StopIteration:
-            raise EOFError
+            raise EOFError from None
 
     stop_repeating_alert = threading.Event()
     monkeypatch.setattr("builtins.input", interrupted_input)
