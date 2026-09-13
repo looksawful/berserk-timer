@@ -7,7 +7,7 @@ from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
 
 from rich.console import Console
 
-from .ascii_art import ASCII_BYE, ASCII_HELP, ASCII_SETTINGS, ASCII_FINISHED, ASCII_WITNESS_LOG
+from .ascii_art import ASCII_BYE, ASCII_SETTINGS, ASCII_FINISHED, ASCII_WITNESS_LOG
 from .audio import (
     get_available_sounds,
     is_globally_muted,
@@ -21,6 +21,8 @@ from .input_utils import read_input
 from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
 from .timer import TimerDurationError, validate_duration_seconds
+from .ui import prompt_input, render_ascii_screen, render_help_screen, render_timer_status
+from .version import __version__
 
 if TYPE_CHECKING:
     from .timer import Timer
@@ -150,8 +152,9 @@ def run_cli_timer(timer: "Timer") -> bool:
     def stop_action() -> None:
         suspend_display.set()
         try:
-            confirmation_value = read_input(
-                "\n[!] Are you sure you want to quit the timer? (y/n): "
+            confirmation_value = prompt_input(
+                console,
+                "\n[bold bright_red][!] Quit timer?[/bold bright_red] [grey62](y/n)[/grey62] "
             )
             confirmation = (
                 confirmation_value.lower().strip()
@@ -161,7 +164,7 @@ def run_cli_timer(timer: "Timer") -> bool:
             if confirmation in ("y", "yes"):
                 timer.stop()
                 exit_flag.set()
-                print(ASCII_BYE)
+                render_ascii_screen(console, ASCII_BYE, "GOODBYE", border_style="bright_red")
                 console.print("[red]Timer stopped by user.[/red]")
             else:
                 console.print("[yellow]Quit cancelled. Timer continues.[/yellow]")
@@ -185,7 +188,7 @@ def run_cli_timer(timer: "Timer") -> bool:
         try:
             screen = get_screen_manager()
             screen.clear_screen()
-            print(ASCII_WITNESS_LOG)
+            render_ascii_screen(console, ASCII_WITNESS_LOG, "WITNESS LOG", border_style="bright_magenta")
             log_content = view_today_log()
             console.print(log_content)
             read_input("\nPress Enter to return to timer...")
@@ -208,8 +211,9 @@ def run_cli_timer(timer: "Timer") -> bool:
                 if len(log_content.split("\n")) > 5:
                     console.print("  [dim]...[/dim]")
 
-                confirmation_value = read_input(
-                    "\n[!] Are you sure you want to delete today's log? (y/n): "
+                confirmation_value = prompt_input(
+                    console,
+                    "\n[bold bright_red][!] Delete today's log?[/bold bright_red] [grey62](y/n)[/grey62] "
                 )
                 confirmation = (
                     confirmation_value.lower().strip()
@@ -314,23 +318,11 @@ def run_cli_timer(timer: "Timer") -> bool:
         try:
             screen = get_screen_manager()
             screen.clear_screen()
-            print(ASCII_HELP)
-            console.print("\n[bold cyan]TIMER COMMANDS:[/bold cyan]")
-            console.print("  [green]p[/green] - Pause/Resume timer")
-            console.print("  [green]q[/green] - Quit timer (with confirmation)")
-            console.print("  [green]x[/green] - Zero the timer")
-            console.print("  [green]r[/green] - Restart timer from beginning")
-            console.print("  [green]v[/green] - View today's witness log")
-            console.print("  [green]d[/green] - Delete today's witness log")
-            console.print("  [green]u[/green] - Update duration (change timer length)")
-            console.print("  [green]g[/green] - Set/change goal for this session")
-            console.print("  [green]m[/green] - Toggle silent mode on/off")
-            console.print(
-                "  [green]s[/green] - Open audio settings (sound file and volume)"
+            render_help_screen(console, __version__)
+            prompt_input(
+                console,
+                "\n[grey62]Press Enter to return to timer...[/grey62]",
             )
-            console.print("  [green]h[/green] - Show this help screen")
-            console.print("  [green]k[/green] - Stop currently playing sound")
-            read_input("\nPress Enter to return to timer...")
             redraw_command_hints()
         finally:
             suspend_display.clear()
@@ -357,7 +349,7 @@ def run_cli_timer(timer: "Timer") -> bool:
                 silent_label = " [SILENT]" if is_silent else ""
                 screen = get_screen_manager()
                 screen.clear_screen()
-                print(ASCII_SETTINGS)
+                render_ascii_screen(console, ASCII_SETTINGS, "AUDIO SETTINGS", border_style="bright_yellow")
                 console.print("\n[bold cyan]═══ AUDIO SETTINGS ═══[/bold cyan]")
                 console.print(
                     f"\n[yellow]Volume:[/yellow] {show_volume_bar(timer.get_volume(), is_silent)}{silent_label}"
@@ -534,14 +526,15 @@ def run_cli_timer(timer: "Timer") -> bool:
             remaining_str = timer.get_remaining_time_str()
 
             if remaining_str != last_remaining_str:
-                silent_marker = "[SILENT] " if timer.is_silent() else ""
-                paused_marker = "[PAUSED] " if timer.is_paused() else ""
-                status = f"{silent_marker}{paused_marker}Time: {remaining_str}"
-
-                width = safe_terminal_width()
-                sys.stdout.write(f"\r{' ' * width}\r{status}")
-                sys.stdout.flush()
-
+                screen = get_screen_manager()
+                screen.clear_line()
+                render_timer_status(
+                    console,
+                    remaining_str,
+                    paused=timer.is_paused(),
+                    silent=timer.is_silent(),
+                    goal=timer.get_goal(),
+                )
                 last_remaining_str = remaining_str
 
         time.sleep(MAIN_LOOP_INTERVAL)
@@ -589,7 +582,7 @@ def cli_witness_form(
     k_listener = threading.Thread(target=check_for_k_key, daemon=True)
     k_listener.start()
 
-    print(ASCII_FINISHED)
+    render_ascii_screen(console, ASCII_FINISHED, "FINISHED", border_style="bright_green")
     console.print("\n[bold cyan]⏰ TIMER FINISHED ⏰[/bold cyan]\n")
     if timer_end_time:
         import datetime
@@ -615,7 +608,7 @@ def cli_witness_form(
                 prompt += f", '{safe_word}' to cancel"
             prompt += ", 'k' to stop alert): "
 
-        response_value = read_input(prompt)
+        response_value = prompt_input(console, prompt)
         if response_value is None:
             stop_alert_flag.set()
             stop_sound()
@@ -650,8 +643,9 @@ def cli_witness_form(
             )
             continue
         elif logging_mode == "witness":
-            confirmation_value = read_input(
-                "\n[yellow]Are you sure you want to skip witness? (y/n):[/yellow] "
+            confirmation_value = prompt_input(
+                console,
+                "\n[bright_yellow]Are you sure you want to skip witness? (y/n):[/bright_yellow] ",
             )
             if confirmation_value is None:
                 if stop_repeating_alert:

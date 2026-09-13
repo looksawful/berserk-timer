@@ -23,9 +23,9 @@ def test_release_ascii_art_is_present_and_multiline() -> None:
         assert "\n" in artwork
 
 
-def test_help_still_renders_main_ascii_logo() -> None:
+def test_help_still_renders_ascii_through_ui_layer() -> None:
     source = inspect.getsource(main.show_help)
-    assert "print(ASCII_LOGO)" in source
+    assert "render_help_screen(console, __version__)" in source
 
 
 def test_timer_command_surface_and_dispatch_are_preserved() -> None:
