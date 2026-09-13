@@ -2,17 +2,20 @@ import argparse
 import atexit
 import sys
 
-from .ascii_art import ASCII_LOGO, AUTHOR_SIGNATURE
+from rich.console import Console
+
 from .audio import set_mute
 from .cli import validate_duration
 from .config_manager import get_default_config_path, load_config
 from .constants import MAX_TIMER_SECONDS
-from .input_utils import read_input
 from .logger import log_event
 from .screen_manager import cleanup_screen, init_screen
 from .session import on_timer_end as on_timer_end
 from .session import run_timer_loop as run_timer_loop
 from .version import __version__
+from .ui import prompt_input, render_help_screen, render_startup_screen
+
+console = Console()
 
 
 def configure_stdout_encoding() -> None:
@@ -29,7 +32,7 @@ def configure_stdout_encoding() -> None:
 
 
 def show_help() -> None:
-    print(ASCII_LOGO)
+    render_help_screen(console, __version__)
     print(
         "\nBerserk Timer - A CLI timer with witness mode and flexible duration input.\n"
     )
@@ -146,33 +149,12 @@ def main() -> None:
     init_screen(use_alternate_buffer=True, debug_mode=args.debug)
     atexit.register(cleanup_screen)
 
-    print(ASCII_LOGO)
-    print(AUTHOR_SIGNATURE)
-    print(f"version: {__version__}")
-
-    print("\nINSTRUCTIONS:")
-    print("  • Set timer duration in minutes")
-    print(
-        "  • Presets: -x (5min), -s (10min), -m (15min), -l (20min), "
-        "-X (25min), -t (1min test)"
+    render_startup_screen(
+        console,
+        version=__version__,
+        config_path=str(get_default_config_path()),
+        max_hours=MAX_TIMER_SECONDS // 3600,
     )
-    print(f"  • Maximum duration: {MAX_TIMER_SECONDS // 3600} hours")
-    print("  • Set your goal for this session (if witness mode enabled, or skip)")
-    print("  • Choose sound: --sound alert1.wav (or alert2/alert3/alert4/alert5)")
-    print("  • Set volume in the user config file (0-10 scale, default: 5)")
-    print(f"  • Config: {get_default_config_path()}")
-    print("  • During timer:")
-    print("    - Press 'p' to pause/resume")
-    print("    - Press 'q' to quit")
-    print("    - Press 'x' to zero the timer")
-    print("    - Press 'r' to restart")
-    print("    - Press 'v' to view today's log")
-    print("    - Press 'd' to delete today's log")
-    print("    - Press 'u' to update duration")
-    print("    - Press 'g' to set/change goal")
-    print("    - Press 'm' to toggle silent mode")
-    print("    - Press 's' to open audio settings (sound/volume)")
-    print("\n" + "-" * 60 + "\n")
 
     config = load_config()
 
@@ -202,17 +184,19 @@ def main() -> None:
         default_duration_minutes: float = 5.0
         while True:
             try:
-                duration_value = read_input(
-                    "\nEnter timer duration in minutes "
-                    f"[max {max_duration_minutes:.0f}] "
+                duration_value = prompt_input(
+                    console,
+                    "\n[bold bright_red]Enter timer duration in minutes[/bold bright_red] "
+                    f"[grey62][max {max_duration_minutes:.0f}][/grey62] "
                     f"(or press Enter for {default_duration_minutes:g} min default): "
                 )
                 if duration_value is None:
                     return
                 duration_input = duration_value.strip()
                 if not duration_input:
-                    confirmation_value = read_input(
-                        f"Use default {default_duration_minutes:g} minutes? (y/n): "
+                    confirmation_value = prompt_input(
+                        console,
+                        f"[bright_yellow]Use default {default_duration_minutes:g} minutes? (y/n):[/bright_yellow] "
                     )
                     if confirmation_value is None:
                         return
@@ -236,8 +220,10 @@ def main() -> None:
             except ValueError:
                 print("Invalid input. Please enter a numeric value.")
 
-    goal_value = read_input(
-        "\nWhat are you planning to do? (or press Enter to skip): "
+    goal_value = prompt_input(
+        console,
+        "\n[bold bright_cyan]What are you planning to do?[/bold bright_cyan] "
+        "[grey62](press Enter to skip)[/grey62] "
     )
     goal = goal_value.strip() or None if goal_value is not None else None
 
