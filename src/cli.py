@@ -8,17 +8,19 @@ from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
 from rich.console import Console
 
 from .ascii_art import ASCII_BYE, ASCII_HELP, ASCII_SETTINGS, ASCII_FINISHED, ASCII_WITNESS_LOG
-from .constants import MAX_TIMER_SECONDS
-from .logger import (
-    delete_today_log,
+from .audio import (
     get_available_sounds,
     is_globally_muted,
     is_sound_playing,
     play_sound,
     stop_sound,
-    view_today_log,
 )
+from .commands import dispatch_command
+from .constants import MAX_TIMER_SECONDS
+from .input_utils import read_input
+from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
+from .timer import TimerDurationError, validate_duration_seconds
 
 if TYPE_CHECKING:
     from .timer import Timer
@@ -33,18 +35,14 @@ VOLUME_LOW_THRESHOLD = 3
 VOLUME_MID_THRESHOLD = 6
 VOLUME_HIGH_THRESHOLD = 8
 MAX_VOLUME = 10
-MIN_DURATION_SECONDS = 1
 MAX_DURATION_MINUTES = MAX_TIMER_SECONDS / 60
 
 
 def validate_duration(seconds: float) -> Tuple[bool, str]:
-    if seconds <= 0:
-        return False, "Duration must be positive"
-    if seconds < MIN_DURATION_SECONDS:
-        return False, f"Duration must be at least {MIN_DURATION_SECONDS} second(s)"
-    if seconds > MAX_TIMER_SECONDS:
-        hours = MAX_TIMER_SECONDS // 3600
-        return False, f"Duration cannot exceed {hours} hours"
+    try:
+        validate_duration_seconds(seconds)
+    except TimerDurationError as exc:
+        return False, str(exc)
     return True, ""
 
 
@@ -152,10 +150,13 @@ def run_cli_timer(timer: "Timer") -> bool:
     def stop_action() -> None:
         suspend_display.set()
         try:
+            confirmation_value = read_input(
+                "\n[!] Are you sure you want to quit the timer? (y/n): "
+            )
             confirmation = (
-                input("\n[!] Are you sure you want to quit the timer? (y/n): ")
-                .lower()
-                .strip()
+                confirmation_value.lower().strip()
+                if confirmation_value is not None
+                else ""
             )
             if confirmation in ("y", "yes"):
                 timer.stop()
@@ -187,7 +188,7 @@ def run_cli_timer(timer: "Timer") -> bool:
             print(ASCII_WITNESS_LOG)
             log_content = view_today_log()
             console.print(log_content)
-            input("\nPress Enter to return to timer...")
+            read_input("\nPress Enter to return to timer...")
             redraw_command_hints()
         finally:
             suspend_display.clear()
@@ -207,10 +208,13 @@ def run_cli_timer(timer: "Timer") -> bool:
                 if len(log_content.split("\n")) > 5:
                     console.print("  [dim]...[/dim]")
 
+                confirmation_value = read_input(
+                    "\n[!] Are you sure you want to delete today's log? (y/n): "
+                )
                 confirmation = (
-                    input("\n[!] Are you sure you want to delete today's log? (y/n): ")
-                    .lower()
-                    .strip()
+                    confirmation_value.lower().strip()
+                    if confirmation_value is not None
+                    else ""
                 )
                 if confirmation in ("y", "yes"):
                     delete_today_log()
@@ -234,7 +238,13 @@ def run_cli_timer(timer: "Timer") -> bool:
                 f"[dim]Max duration: {MAX_DURATION_MINUTES:.0f} minutes ({MAX_TIMER_SECONDS // 3600} hours)[/dim]\n"
             )
 
-            user_input = input("Enter new duration in minutes: ").strip()
+            duration_value = read_input("Enter new duration in minutes: ")
+            if duration_value is None:
+                console.print("[yellow]Cancelled.[/yellow]")
+                time.sleep(1)
+                redraw_command_hints()
+                return
+            user_input = duration_value.strip()
             if not user_input:
                 console.print("[yellow]Cancelled.[/yellow]")
                 time.sleep(1)
@@ -281,7 +291,13 @@ def run_cli_timer(timer: "Timer") -> bool:
             current_goal = timer.get_goal()
             if current_goal:
                 console.print(f"[dim]Current goal: {current_goal}[/dim]\n")
-            new_goal = input("Enter your goal (or press Enter to clear): ").strip()
+            goal_value = read_input("Enter your goal (or press Enter to clear): ")
+            if goal_value is None:
+                console.print("[yellow]Cancelled.[/yellow]")
+                time.sleep(1)
+                redraw_command_hints()
+                return
+            new_goal = goal_value.strip()
             if new_goal:
                 timer.set_goal(new_goal)
                 console.print(f"[green]Goal set: {new_goal}[/green]")
@@ -314,7 +330,7 @@ def run_cli_timer(timer: "Timer") -> bool:
             )
             console.print("  [green]h[/green] - Show this help screen")
             console.print("  [green]k[/green] - Stop currently playing sound")
-            input("\nPress Enter to return to timer...")
+            read_input("\nPress Enter to return to timer...")
             redraw_command_hints()
         finally:
             suspend_display.clear()
@@ -369,10 +385,10 @@ def run_cli_timer(timer: "Timer") -> bool:
 
             while True:
                 show_menu_header()
-                try:
-                    choice = input("\n> ").strip()
-                except (EOFError, KeyboardInterrupt):
+                choice_value = read_input("\n> ")
+                if choice_value is None:
                     break
+                choice = choice_value.strip()
 
                 if not choice:
                     break
@@ -501,10 +517,8 @@ def run_cli_timer(timer: "Timer") -> bool:
                 if ord(key[0]) < 32:
                     continue
 
-                key = key.lower()
-                if key in commands:
-                    commands[key]()
-                    if key == "q" and exit_flag.is_set():
+                if dispatch_command(key, commands):
+                    if key.lower() == "q" and exit_flag.is_set():
                         break
             time.sleep(KEY_POLL_INTERVAL)
 
@@ -537,7 +551,6 @@ def run_cli_timer(timer: "Timer") -> bool:
     stop_listener_event.set()
     if listener.is_alive():
         listener.join(timeout=1.0)
-
     return exit_flag.is_set()
 
 
@@ -552,7 +565,7 @@ def cli_witness_form(
 ) -> Tuple[str, Optional[float]]:
     if logging_mode == "disabled":
         console.print("\n[dim]Logging disabled. Press Enter to continue...[/dim]")
-        input()
+        read_input()
         return ("Logging disabled.", timer_end_time)
 
     stop_alert_flag = threading.Event()
@@ -602,18 +615,19 @@ def cli_witness_form(
                 prompt += f", '{safe_word}' to cancel"
             prompt += ", 'k' to stop alert): "
 
-        try:
-            response = input(prompt).strip()
-            stop_alert_flag.set()
-            stop_sound()
-            if stop_repeating_alert:
-                stop_repeating_alert.set()
-        except (EOFError, KeyboardInterrupt):
+        response_value = read_input(prompt)
+        if response_value is None:
             stop_alert_flag.set()
             stop_sound()
             if stop_repeating_alert:
                 stop_repeating_alert.set()
             return ("Witness skipped.", timer_end_time)
+
+        response = response_value.strip()
+        stop_alert_flag.set()
+        stop_sound()
+        if stop_repeating_alert:
+            stop_repeating_alert.set()
 
         if safe_word and response.lower() == safe_word.lower():
             if stop_repeating_alert:
@@ -636,13 +650,14 @@ def cli_witness_form(
             )
             continue
         elif logging_mode == "witness":
-            confirmation = (
-                input(
-                    "\n[yellow]Are you sure you want to skip witness? (y/n):[/yellow] "
-                )
-                .strip()
-                .lower()
+            confirmation_value = read_input(
+                "\n[yellow]Are you sure you want to skip witness? (y/n):[/yellow] "
             )
+            if confirmation_value is None:
+                if stop_repeating_alert:
+                    stop_repeating_alert.set()
+                return ("Witness skipped.", timer_end_time)
+            confirmation = confirmation_value.strip().lower()
             if confirmation in ("y", "yes"):
                 if stop_repeating_alert:
                     stop_repeating_alert.set()

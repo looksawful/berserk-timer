@@ -4,15 +4,10 @@
         "Do push-ups",
         "Take a short walk",
         "Stretch your legs",
-        "japaneese",
-        "clear work files",
-        "refactor pets",
-        "Hands exercises",
-        "Type",
-        "Read the book", 
-        "write a code for pets",
-        "Do your daily exercises",
-        ""
+        "Take a breath",
+        "Take a break",
+        "Drink tea",
+        "Read a few pages"
     ],
     "presets": {
         "xs": 5,
@@ -23,5 +18,7 @@
         "test": 1
     },
     "witness_mode": true,
-    "safe_word": "q"
+    "safe_word": "skip",
+    "sound_file": "alert1.wav",
+    "volume": 5
 }

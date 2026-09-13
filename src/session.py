@@ -7,6 +7,7 @@ import time
 
 from .audio import get_sound_duration, get_sound_path, play_sound, stop_sound
 from .cli import cli_witness_form, run_cli_timer, validate_duration
+from .input_utils import read_input
 from .logger import log_event, log_timer_end, log_timer_start, log_witness_response
 from .timer import Timer, TimerDurationError
 
@@ -96,7 +97,10 @@ def run_timer_loop(
     while True:
         if not first_iteration:
             while True:
-                user_input = input("Enter timer duration in minutes: ").strip()
+                duration_value = read_input("Enter timer duration in minutes: ")
+                if duration_value is None:
+                    return
+                user_input = duration_value.strip()
                 if not user_input:
                     logging.error("Duration is required. Please enter a number.")
                     continue
@@ -110,7 +114,10 @@ def run_timer_loop(
                     break
                 except ValueError:
                     logging.error("Invalid input. Please enter a numeric value.")
-            goal = input("Enter your goal (or leave empty): ").strip() or None
+            goal_value = read_input("Enter your goal (or leave empty): ")
+            if goal_value is None:
+                return
+            goal = goal_value.strip() or None
 
         if duration is None:
             logging.error("Error: Duration cannot be None.")
@@ -177,7 +184,10 @@ def run_timer_loop(
         else:
             elapsed_str = ""
 
-        restart_choice = input(f"\nRestart timer?{elapsed_str} (y/n): ").lower().strip()
+        restart_value = read_input(f"\nRestart timer?{elapsed_str} (y/n): ")
+        if restart_value is None:
+            break
+        restart_choice = restart_value.lower().strip()
         if restart_choice not in ("y", "yes"):
             break
         first_iteration = False

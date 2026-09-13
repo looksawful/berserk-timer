@@ -47,3 +47,11 @@ def test_first_run_migrates_legacy_source_config(monkeypatch, tmp_path):
     assert target.exists()
     assert config["safe_word"] == "q"
     assert config["volume"] == 8
+
+
+def test_repository_config_is_canonical_default_config():
+    source_config = config_manager.get_legacy_source_config_path()
+
+    loaded = json.loads(source_config.read_text(encoding="utf-8"))
+
+    assert loaded == config_manager.DEFAULT_CONFIG

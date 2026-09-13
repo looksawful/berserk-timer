@@ -1,4 +1,4 @@
-# Berserk Timer 0.2.1-beta
+# Berserk Timer 0.3.0-beta
 
 ```text
 ███   ▄███▄   █▄▄▄▄   ▄▄▄▄▄   ▄███▄   █▄▄▄▄ █  █▀
@@ -22,7 +22,7 @@ Berserk Timer is a small Python CLI timer with flexible duration input, presets,
 
 The project is beta software. Windows is the primary platform and has a dedicated CI lane. The portable core and test suite are also exercised on Linux with Python 3.10, 3.11 and 3.12. Linux and macOS audio/terminal behavior still depends on the host terminal and available audio backend, so platform-specific interactive behavior should be treated more cautiously than the core timer tests.
 
-The active timer engine is `src.timer.Timer`. Duration accounting uses a monotonic clock so system clock changes do not alter elapsed timer time.
+The active timer engine is `src.timer.Timer`. Duration accounting uses a monotonic clock so system clock changes do not alter elapsed timer time. Interactive prompts normalize EOF and Ctrl+C so interrupted input exits or cancels the current flow cleanly instead of leaking a traceback.
 
 ## Installation
 
@@ -118,18 +118,22 @@ Unknown arguments are rejected instead of being silently ignored.
 - `k`: stop the currently playing alert
 - `h`: show in-app help
 
+Command routing is separated from raw keyboard polling so the command surface can be regression-tested without simulating a terminal.
+
 ## Witness logging
 
 When witness mode is enabled, the timer asks what was accomplished after the session. The default safe word is `skip`.
 
-Logs are written to:
+Logs are user-scoped instead of being written into whichever directory happened to launch `berserk`:
 
 ```text
-logs/berserk.log
-logs/witness_log_YYYY-MM-DD.txt
+Windows: %LOCALAPPDATA%\Berserk Timer\logs
+Linux:   $XDG_STATE_HOME/berserk-timer/logs
+         or ~/.local/state/berserk-timer/logs
+macOS:   ~/Library/Application Support/Berserk Timer/logs
 ```
 
-If the log directory is not writable, regular log messages fall back to stderr. Audio playback is independent from log-file availability.
+`BERSERK_LOG_DIR` can override this location for controlled environments and tests. If the log directory is not writable, regular log messages fall back to stderr. Audio playback is independent from log-file availability.
 
 ## Audio
 
@@ -137,11 +141,13 @@ Runtime audio is isolated in `src/audio.py`. `pygame` is the primary playback ba
 
 Berserk Timer only terminates audio processes it started itself. It does not use system-wide `killall` and does not change the operating system's master volume.
 
-Available WAV files are discovered from the repository assets directory when running from source and from the installed package assets directory after `pip install .`.
+The release ships five WAV alerts: `alert1.wav` through `alert5.wav`. They are discovered from the repository assets directory when running from source and from the installed package assets directory after `pip install .`. CI validates that all five installed files exist and can be parsed with a positive WAV duration outside the source checkout.
 
 ## Configuration
 
-`config.json` is loaded with required defaults filled in when older or partial configuration files omit fields. User-provided values are preserved where valid.
+The runtime config lives in the platform-specific user config directory. The repository-level `config.json` is the canonical migration/default file and matches the application's built-in defaults.
+
+Older or partial configuration files are normalized on load. Valid user values are preserved, malformed JSON is repaired back to defaults, string booleans such as `"false"` are parsed explicitly, invalid preset values fall back to safe defaults, and valid custom presets are retained.
 
 Current default shape:
 
@@ -175,8 +181,11 @@ The main runtime boundaries are:
 
 ```text
 src.timer          timer state and duration semantics
-src.main           application/session orchestration
-src.cli            terminal interaction and commands
+src.main           startup, argument parsing and dependency composition
+src.session        session orchestration, restart flow and timer completion
+src.cli            terminal interaction and command handlers
+src.commands       raw-key-independent command dispatch
+src.input_utils    EOF/Ctrl+C-safe interactive input adapter
 src.audio          audio playback and owned process lifecycle
 src.logger         system/witness persistence
 src.config_manager configuration loading and normalization
@@ -193,11 +202,14 @@ CI currently checks:
 - pytest on Windows with Python 3.12;
 - source compilation;
 - package installation and the `berserk` console entry point;
+- all five WAV alerts from the installed package, outside the source checkout;
+- the release ASCII artwork and command-key contract;
+- EOF/Ctrl+C behavior across startup, session and witness flows;
 - Ruff correctness checks;
 - MyPy;
 - `pip-audit` against runtime dependencies.
 
-Regression tests cover launcher argument forwarding, duplicate timer threads, monotonic duration accounting, strict argument parsing, explicit zero-duration validation, partial configuration repair, audio ownership and terminal cleanup.
+Regression tests cover launcher argument forwarding, duplicate timer threads, monotonic duration accounting, strict argument parsing, explicit zero-duration validation, configuration recovery/normalization, user-scoped log storage, audio ownership, terminal cleanup and release UI/audio contracts.
 
 ## License
 

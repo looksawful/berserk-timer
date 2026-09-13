@@ -23,3 +23,21 @@ def test_readme_references_existing_windows_launcher() -> None:
 
     assert "brsrk-cli.bat" not in readme
     assert "brsrk.bat" in readme
+
+
+def test_windows_shortcut_helper_uses_script_directory_and_existing_icon() -> None:
+    helper = (ROOT / "mkshortcut.bat").read_text(encoding="utf-8")
+
+    assert "%~dp0" in helper
+    assert "src\\assets\\favicon.ico" not in helper
+    assert "assets\\icon.ico" in helper
+    assert (ROOT / "assets" / "icon.ico").exists()
+
+
+def test_windows_shortcut_helper_creates_real_lnk_for_launcher() -> None:
+    helper = (ROOT / "mkshortcut.bat").read_text(encoding="utf-8")
+
+    assert "WScript.Shell" in helper
+    assert "Berserk Timer.lnk" in helper
+    assert "brsrk.bat" in helper
+    assert ".url" not in helper

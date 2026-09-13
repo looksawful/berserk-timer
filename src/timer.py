@@ -1,4 +1,5 @@
 import logging
+import math
 import threading
 import time
 from typing import Optional
@@ -6,13 +7,29 @@ from typing import Optional
 from .constants import MAX_TIMER_SECONDS
 from .logger import log_event
 
+MIN_TIMER_SECONDS = 1
+
 
 class TimerDurationError(ValueError):
     pass
 
 
+def validate_duration_seconds(duration: float) -> None:
+    if not math.isfinite(duration):
+        raise TimerDurationError("Duration must be a finite number")
+    if duration <= 0:
+        raise TimerDurationError("Duration must be positive")
+    if duration < MIN_TIMER_SECONDS:
+        raise TimerDurationError(
+            f"Duration must be at least {MIN_TIMER_SECONDS} second(s)"
+        )
+    if duration > MAX_TIMER_SECONDS:
+        hours = MAX_TIMER_SECONDS // 3600
+        raise TimerDurationError(f"Duration cannot exceed {hours} hours")
+
+
 class Timer:
-    MIN_DURATION = 1
+    MIN_DURATION = MIN_TIMER_SECONDS
     MAX_DURATION = MAX_TIMER_SECONDS
 
     def __init__(
@@ -40,15 +57,7 @@ class Timer:
 
     @classmethod
     def _validate_duration(cls, duration: float) -> None:
-        if duration <= 0:
-            raise TimerDurationError("Duration must be positive")
-        if duration < cls.MIN_DURATION:
-            raise TimerDurationError(
-                f"Duration must be at least {cls.MIN_DURATION} second(s)"
-            )
-        if duration > cls.MAX_DURATION:
-            hours = cls.MAX_DURATION // 3600
-            raise TimerDurationError(f"Duration cannot exceed {hours} hours")
+        validate_duration_seconds(duration)
 
     def start(self) -> None:
         if self.is_running():

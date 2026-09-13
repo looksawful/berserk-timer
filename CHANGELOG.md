@@ -4,9 +4,14 @@ All notable changes to Berserk Timer are documented here.
 
 ## Unreleased
 
+---
+
+## [0.3.0-beta] - 2026-09-13
+
 ### Fixed
 - Launchers now forward user arguments unchanged and no longer inject a duration or witness mode.
 - Windows launcher no longer depends on a machine-specific Python path.
+- Windows shortcut helper now resolves paths from its own location, references the shipped `assets/icon.ico`, and creates a real `Berserk Timer.lnk` instead of a stale `.url` file.
 - Repeated `Timer.start()` calls no longer create duplicate countdown threads.
 - Timer duration accounting now uses a monotonic clock and is not affected by wall-clock jumps.
 - Unknown CLI arguments are rejected instead of silently ignored.
@@ -16,19 +21,29 @@ All notable changes to Berserk Timer are documented here.
 - Linux/macOS audio cleanup no longer uses system-wide `killall`, and Linux playback no longer changes the system master volume.
 - Terminal cleanup resets the screen-manager singleton for clean repeated runs in the same process.
 - Partial `config.json` files inherit required defaults without overwriting valid user values.
+- Malformed JSON config files recover to canonical defaults instead of crashing startup.
+- String booleans and individual preset values are normalized explicitly instead of relying on Python truthiness or unchecked values.
+- Repository `config.json` now matches the application's canonical built-in defaults, so source and installed first-run behavior no longer drift.
+- Runtime logs now use a user-scoped state directory instead of the current working directory.
+- Non-finite timer durations such as `NaN` are rejected by the timer domain instead of entering an invalid countdown state.
+- EOF and Ctrl+C during interactive startup, restart, command and witness prompts now cancel or exit the active flow cleanly instead of leaking tracebacks.
 - Runtime author/repository attribution points to `looksawful/berserk-timer`.
 
 ### Changed
 - Audio playback and process ownership moved into `src/audio.py`; logging/persistence remains in `src/logger.py`.
+- CLI audio controls now import the audio adapter directly; `src.logger` no longer exposes audio compatibility wrappers.
+- Timer duration validation has one domain owner in `src.timer`; the CLI preserves its existing `(valid, message)` adapter contract.
+- Raw keyboard polling now delegates command lookup and execution to the small `src.commands` dispatcher, so routing can be tested without terminal input.
+- Interactive text input now passes through `src.input_utils` for one EOF/Ctrl+C contract across startup, session and CLI flows.
 - Packaging now uses `pyproject.toml` with an installable `berserk` console command.
 - Runtime dependencies are separated from development/test dependencies.
 - The ineffective virtual-environment bootstrap `setup.py` was removed.
-- CI now includes Python 3.10/3.11/3.12 Linux tests, Windows Python 3.12 tests, install/entrypoint smoke tests, Ruff, MyPy and dependency auditing.
+- CI now includes Python 3.10/3.11/3.12 Linux tests, Windows Python 3.12 tests, install/entrypoint smoke tests, installed WAV validation, release UI/audio contract tests, Ruff, MyPy and dependency auditing.
 - GitHub Actions checkout/setup-python were updated to their current major versions.
 - README and development documentation were reconciled with the implemented runtime and controls.
 
 ### Security / Safety
-- `pip-audit` reports no known vulnerabilities in the current runtime dependency set at the time of this audit.
+- `pip-audit` reports no known vulnerabilities in the current runtime dependency set at the time of this release audit.
 - Audio fallback processes are tracked and only processes started by Berserk Timer are terminated.
 
 ---

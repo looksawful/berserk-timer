@@ -7,6 +7,7 @@ from .audio import set_mute
 from .cli import validate_duration
 from .config_manager import get_default_config_path, load_config
 from .constants import MAX_TIMER_SECONDS
+from .input_utils import read_input
 from .logger import log_event
 from .screen_manager import cleanup_screen, init_screen
 from .session import on_timer_end as on_timer_end
@@ -201,19 +202,21 @@ def main() -> None:
         default_duration_minutes: float = 5.0
         while True:
             try:
-                duration_input = input(
+                duration_value = read_input(
                     "\nEnter timer duration in minutes "
                     f"[max {max_duration_minutes:.0f}] "
                     f"(or press Enter for {default_duration_minutes:g} min default): "
-                ).strip()
+                )
+                if duration_value is None:
+                    return
+                duration_input = duration_value.strip()
                 if not duration_input:
-                    confirmation = (
-                        input(
-                            f"Use default {default_duration_minutes:g} minutes? (y/n): "
-                        )
-                        .strip()
-                        .lower()
+                    confirmation_value = read_input(
+                        f"Use default {default_duration_minutes:g} minutes? (y/n): "
                     )
+                    if confirmation_value is None:
+                        return
+                    confirmation = confirmation_value.strip().lower()
                     if confirmation in ("y", "yes", ""):
                         duration_minutes = default_duration_minutes
                         print(
@@ -233,13 +236,10 @@ def main() -> None:
             except ValueError:
                 print("Invalid input. Please enter a numeric value.")
 
-    try:
-        goal = (
-            input("\nWhat are you planning to do? (or press Enter to skip): ").strip()
-            or None
-        )
-    except (EOFError, KeyboardInterrupt):
-        goal = None
+    goal_value = read_input(
+        "\nWhat are you planning to do? (or press Enter to skip): "
+    )
+    goal = goal_value.strip() or None if goal_value is not None else None
 
     set_mute(args.mute)
     witness_mode = args.w or config.get("witness_mode", False)
