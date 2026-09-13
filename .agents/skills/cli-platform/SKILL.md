@@ -12,22 +12,26 @@ Keep the CLI predictable and make platform assumptions explicit instead of silen
 2. Preserve user arguments exactly. A launcher may choose an interpreter, but it must not silently inject duration, witness mode, or other behavior.
 3. Prefer `sys.executable`, an active virtual environment, `py`, or `python`/`python3` discovery over fixed installation paths.
 4. Keep Windows and POSIX implementations behind the same small interface where practical.
-5. For headless automated tests, use dummy audio and mocked terminal input rather than weakening runtime behavior.
-6. Run the full pytest suite. For Windows-specific changes, record a Windows smoke test separately because Linux CI cannot prove `msvcrt`, console-buffer, shortcut, or Windows audio behavior.
+5. Route interactive `input()` through the shared input adapter so EOF/Ctrl+C behavior stays consistent and testable.
+6. For headless automated tests, use dummy audio and mocked terminal input rather than weakening runtime behavior.
+7. Run the full pytest suite. For Windows-specific changes, require the Windows CI lane because Linux cannot prove `msvcrt`, console-buffer, shortcut, or Windows audio behavior.
 
 ## Contracts
 
-- `python -m src.main <args>` remains the canonical direct invocation until real packaging is introduced;
+- `pip install .` installs the `berserk` console command; `python -m src.main <args>` remains the supported direct source invocation;
 - launcher arguments are forwarded once, in order;
 - help text and README name only files/options that exist;
 - alternate-screen cleanup happens on normal exit and exceptional exit paths;
 - keyboard listeners terminate cleanly;
+- raw keyboard polling delegates command lookup to the command dispatcher;
 - preview audio cannot outlive or override the real timer alarm;
+- the five shipped WAV alerts remain discoverable both from source and from an installed package;
 - platform fallbacks fail clearly and do not hang startup.
 
 ## Avoid
 
 - hard-coded absolute interpreter paths;
 - implicit default duration inside shell/batch wrappers;
+- direct `input()` calls in interactive runtime modules;
 - assuming successful import on Ubuntu means interactive Linux/macOS support is proven;
 - placing more OS branches inside domain timer logic.
