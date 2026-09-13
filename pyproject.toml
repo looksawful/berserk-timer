@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "berserk-timer"
-version = "0.2.1b0"
+version = "0.3.0b0"
 description = "CLI timer with witness mode and flexible duration input."
 readme = "README.md"
 requires-python = ">=3.10"
