@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [dev, prod, master, "chore/**", "fix/**", "feat/**"]
+    branches: [dev, prod, master, "chore/**", "fix/**", "feat/**", "release/**"]
   pull_request:
 
 permissions:
@@ -66,6 +66,21 @@ jobs:
         run: python -c "import src.main; import src.audio"
       - name: Verify console entrypoint
         run: berserk --help
+      - name: Verify installed audio assets
+        shell: bash
+        run: |
+          cd "$(mktemp -d)"
+          python - <<'PY'
+          from pathlib import Path
+          import src.audio as audio
+
+          expected = [f"alert{i}.wav" for i in range(1, 6)]
+          assert audio.get_available_sounds() == expected
+          for name in expected:
+              path = Path(audio.get_sound_path(name))
+              assert path.is_file(), name
+              assert audio.get_sound_duration(str(path)) > 0, name
+          PY
 
   static-audit:
     name: static audit
