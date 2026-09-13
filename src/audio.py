@@ -112,6 +112,7 @@ def _play_native(
             print("\a", end="", flush=True)
         return
 
+    command: list[str] | None = None
     if sys.platform.startswith("linux"):
         command = ["aplay", "-q", asset_path]
     elif sys.platform.startswith("darwin"):
@@ -120,6 +121,7 @@ def _play_native(
         print("\a", end="", flush=True)
         return
 
+    assert command is not None
     process: subprocess.Popen[bytes] | None = None
     try:
         process = subprocess.Popen(
