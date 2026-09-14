@@ -76,3 +76,17 @@ def test_cli_routes_ascii_screens_through_ui_renderer() -> None:
 
 def test_primary_color_is_matrix_green() -> None:
     assert PRIMARY.lower() == "#00ff41"
+
+
+def test_startup_screen_fits_standard_80x30_terminal() -> None:
+    stream = StringIO()
+    console = Console(file=stream, force_terminal=True, color_system="truecolor", width=80)
+
+    render_startup_screen(
+        console,
+        version="0.3.0-beta",
+        config_path=r"C:\Users\awful\AppData\Roaming\Berserk Timer\config.json",
+        max_hours=24,
+    )
+
+    assert len(stream.getvalue().splitlines()) <= 29

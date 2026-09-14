@@ -2,7 +2,6 @@ from rich import box
 from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -32,7 +31,7 @@ def render_ascii_banner(
             border_style=border_style,
             title=Text(f" {title} ", style=f"bold {border_style}"),
             subtitle=Text(f" {subtitle} ", style=MUTED) if subtitle else None,
-            padding=(1, 2),
+            padding=(0, 2),
         )
     )
 
@@ -77,26 +76,25 @@ def render_startup_screen(
 ) -> None:
     render_ascii_banner(console, ASCII_LOGO, "BERSERK TIMER", version)
     console.print(Align.center(Text(AUTHOR_SIGNATURE, style=MUTED)))
-    console.print()
-    console.print(
-        Panel(
-            _parameter_table(config_path, max_hours),
-            title=Text(" PARAMETERS ", style=f"bold {ACCENT}"),
-            border_style=ACCENT,
-            box=box.ROUNDED,
-            padding=(0, 1),
-        )
+    parameters_panel = Panel(
+        _parameter_table(config_path, max_hours),
+        title=Text(" PARAMETERS ", style=f"bold {ACCENT}"),
+        border_style=ACCENT,
+        box=box.ROUNDED,
+        padding=(0, 1),
     )
-    console.print(
-        Panel(
-            _controls_table(),
-            title=Text(" CONTROLS ", style=f"bold {SECONDARY}"),
-            border_style=SECONDARY,
-            box=box.ROUNDED,
-            padding=(0, 1),
-        )
+    controls_panel = Panel(
+        _controls_table(),
+        title=Text(" CONTROLS ", style=f"bold {SECONDARY}"),
+        border_style=SECONDARY,
+        box=box.ROUNDED,
+        padding=(0, 1),
     )
-    console.print(Rule(style=MUTED))
+    layout = Table.grid(expand=True, padding=(0, 1))
+    layout.add_column(ratio=1)
+    layout.add_column(ratio=1)
+    layout.add_row(parameters_panel, controls_panel)
+    console.print(layout)
 
 
 def render_help_screen(console: Console, version: str) -> None:
