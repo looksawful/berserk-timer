@@ -3,7 +3,7 @@ from io import StringIO
 from rich.console import Console
 
 from src.ascii_art import ASCII_LOGO
-from src.ui import render_ascii_banner, render_startup_screen
+from src.ui import PRIMARY, render_ascii_banner, render_startup_screen
 
 
 def _terminal_console():
@@ -72,3 +72,7 @@ def test_cli_routes_ascii_screens_through_ui_renderer() -> None:
         assert f"print({artwork})" not in source
     assert "render_ascii_screen(" in source
     assert "render_help_screen(" in source
+
+
+def test_primary_color_is_matrix_green() -> None:
+    assert PRIMARY.lower() == "#00ff41"

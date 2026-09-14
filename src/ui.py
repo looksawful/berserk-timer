@@ -9,7 +9,7 @@ from rich.text import Text
 from .ascii_art import ASCII_HELP, ASCII_LOGO, AUTHOR_SIGNATURE
 from .input_utils import read_input
 
-PRIMARY = "bright_red"
+PRIMARY = "#00FF41"
 ACCENT = "bright_yellow"
 SECONDARY = "bright_cyan"
 SUCCESS = "bright_green"
