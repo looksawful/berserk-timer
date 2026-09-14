@@ -6,7 +6,7 @@ All notable changes to Berserk Timer are documented here.
 
 ---
 
-## [0.3.0-beta] - 2026-09-13
+## [0.3.0-beta] - 2026-09-15
 
 ### Fixed
 - Launchers now forward user arguments unchanged and no longer inject a duration or witness mode.
@@ -28,6 +28,9 @@ All notable changes to Berserk Timer are documented here.
 - Non-finite timer durations such as `NaN` are rejected by the timer domain instead of entering an invalid countdown state.
 - EOF and Ctrl+C during interactive startup, restart, command and witness prompts now cancel or exit the active flow cleanly instead of leaking tracebacks.
 - Runtime author/repository attribution points to `looksawful/berserk-timer`.
+- Restored the decorated Rich/ASCII terminal presentation instead of the regressed plain-console startup.
+- Restored the primary terminal identity to Matrix green (`#00FF41`) while keeping red for error/destructive semantics.
+- Startup rendering is compact enough for standard-height terminals and stays out of the alternate buffer until the timer begins, preventing the top of the ASCII UI from being cropped.
 
 ### Changed
 - Audio playback and process ownership moved into `src/audio.py`; logging/persistence remains in `src/logger.py`.
@@ -41,6 +44,7 @@ All notable changes to Berserk Timer are documented here.
 - CI now includes Python 3.10/3.11/3.12 Linux tests, Windows Python 3.12 tests, install/entrypoint smoke tests, installed WAV validation, release UI/audio contract tests, Ruff, MyPy and dependency auditing.
 - GitHub Actions checkout/setup-python were updated to their current major versions.
 - README and development documentation were reconciled with the implemented runtime and controls.
+- Terminal presentation is centralized in `src/ui.py`, with Rich styling and `NO_COLOR` compatibility covered by regression tests.
 
 ### Security / Safety
 - `pip-audit` reports no known vulnerabilities in the current runtime dependency set at the time of this release audit.
