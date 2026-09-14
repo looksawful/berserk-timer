@@ -13,7 +13,7 @@ from .screen_manager import cleanup_screen, init_screen
 from .session import on_timer_end as on_timer_end
 from .session import run_timer_loop as run_timer_loop
 from .version import __version__
-from .ui import prompt_input, render_help_screen, render_startup_screen
+from .ui import PRIMARY, prompt_input, render_help_screen, render_startup_screen
 
 console = Console()
 
@@ -146,9 +146,6 @@ def main() -> None:
     if args.show_help:
         show_help()
 
-    init_screen(use_alternate_buffer=True, debug_mode=args.debug)
-    atexit.register(cleanup_screen)
-
     render_startup_screen(
         console,
         version=__version__,
@@ -186,7 +183,7 @@ def main() -> None:
             try:
                 duration_value = prompt_input(
                     console,
-                    "\n[bold bright_red]Enter timer duration in minutes[/bold bright_red] "
+                    f"[bold {PRIMARY}]Enter timer duration in minutes[/bold {PRIMARY}] "
                     f"[grey62][max {max_duration_minutes:.0f}][/grey62] "
                     f"(or press Enter for {default_duration_minutes:g} min default): "
                 )
@@ -229,6 +226,8 @@ def main() -> None:
 
     set_mute(args.mute)
     witness_mode = args.w or config.get("witness_mode", False)
+    init_screen(use_alternate_buffer=True, debug_mode=args.debug)
+    atexit.register(cleanup_screen)
     run_timer_loop(args, config, duration, witness_mode, args.c, goal, interactive_mode)
     log_event("Application terminated.")
 
