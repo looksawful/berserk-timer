@@ -133,11 +133,13 @@ else:
         return ch
 
 
-def run_cli_timer(timer: "Timer") -> bool:
-    exit_flag = threading.Event()
-    suspend_display = threading.Event()
-    in_audio_menu = threading.Event()
-    stop_listener_event = threading.Event()
+def build_timer_command_handlers(
+    timer: "Timer",
+    *,
+    exit_flag: threading.Event,
+    suspend_display: threading.Event,
+    in_audio_menu: threading.Event,
+) -> Dict[str, Callable[[], None]]:
 
     def toggle_pause_action() -> None:
         suspend_display.set()
@@ -457,6 +459,7 @@ def run_cli_timer(timer: "Timer") -> bool:
             stop_sound()
         suspend_display.clear()
 
+
     commands: Dict[str, Callable[[], None]] = {
         "p": toggle_pause_action,
         "q": stop_action,
@@ -471,6 +474,23 @@ def run_cli_timer(timer: "Timer") -> bool:
         "k": stop_sound_action,
         "h": show_help_action,
     }
+
+
+    return commands
+
+
+def run_cli_timer(timer: "Timer") -> bool:
+    exit_flag = threading.Event()
+    suspend_display = threading.Event()
+    in_audio_menu = threading.Event()
+    stop_listener_event = threading.Event()
+
+    commands = build_timer_command_handlers(
+        timer,
+        exit_flag=exit_flag,
+        suspend_display=suspend_display,
+        in_audio_menu=in_audio_menu,
+    )
 
     def keyboard_listener() -> None:
         while (
