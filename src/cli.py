@@ -478,7 +478,10 @@ def build_timer_command_handlers(
         "h": show_help_action,
     }
 
-    return commands\n\n\ndef run_cli_timer(timer: "Timer") -> bool:
+    return commands
+
+
+def run_cli_timer(timer: "Timer") -> bool:
     exit_flag = threading.Event()
     suspend_display = threading.Event()
     in_audio_menu = threading.Event()
