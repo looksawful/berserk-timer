@@ -29,9 +29,11 @@ def test_help_still_renders_ascii_through_ui_layer() -> None:
 
 
 def test_timer_command_surface_and_dispatch_are_preserved() -> None:
-    source = inspect.getsource(cli.run_cli_timer)
+    factory_source = inspect.getsource(cli.build_timer_command_handlers)
+    loop_source = inspect.getsource(cli.run_cli_timer)
 
     for key in EXPECTED_COMMAND_KEYS:
-        assert f'"{key}":' in source
+        assert f'"{key}":' in factory_source
 
-    assert "dispatch_command(key, commands)" in source
+    assert "commands = build_timer_command_handlers(" in loop_source
+    assert "dispatch_command(key, commands)" in loop_source
