@@ -40,3 +40,38 @@ def test_cli_keyboard_loop_delegates_routing_to_dispatcher() -> None:
     assert "from .commands import dispatch_command" in source
     assert "dispatch_command(key, commands)" in source
     assert "if key in commands:" not in source
+
+
+def test_cli_exposes_command_handler_factory_without_starting_keyboard_listener() -> None:
+    cli = importlib.import_module("src.cli")
+
+    assert hasattr(cli, "build_timer_command_handlers")
+
+
+def test_command_handler_factory_preserves_command_surface_and_simple_actions() -> None:
+    cli = importlib.import_module("src.cli")
+    calls: list[str] = []
+
+    class FakeTimer:
+        def is_paused(self) -> bool:
+            return False
+
+        def pause(self) -> None:
+            calls.append("pause")
+
+        def resume(self) -> None:
+            calls.append("resume")
+
+        def zero(self) -> None:
+            calls.append("zero")
+
+        def restart(self) -> None:
+            calls.append("restart")
+
+    handlers = cli.build_timer_command_handlers(FakeTimer())
+
+    assert set(handlers) == set("pqxrvdugmskh")
+    handlers["p"]()
+    handlers["x"]()
+    handlers["r"]()
+    assert calls == ["pause", "zero", "restart"]
