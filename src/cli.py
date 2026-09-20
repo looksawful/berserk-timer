@@ -133,11 +133,17 @@ else:
         return ch
 
 
-def run_cli_timer(timer: "Timer") -> bool:
-    exit_flag = threading.Event()
-    suspend_display = threading.Event()
-    in_audio_menu = threading.Event()
-    stop_listener_event = threading.Event()
+def build_timer_command_handlers(
+    timer: "Timer",
+    *,
+    exit_flag: threading.Event | None = None,
+    suspend_display: threading.Event | None = None,
+    in_audio_menu: threading.Event | None = None,
+) -> Dict[str, Callable[[], None]]:
+    """Build timer command handlers independently from raw keyboard polling."""
+    exit_flag = exit_flag or threading.Event()
+    suspend_display = suspend_display or threading.Event()
+    in_audio_menu = in_audio_menu or threading.Event()
 
     def toggle_pause_action() -> None:
         suspend_display.set()
@@ -471,6 +477,19 @@ def run_cli_timer(timer: "Timer") -> bool:
         "k": stop_sound_action,
         "h": show_help_action,
     }
+
+    return commands\n\n\ndef run_cli_timer(timer: "Timer") -> bool:
+    exit_flag = threading.Event()
+    suspend_display = threading.Event()
+    in_audio_menu = threading.Event()
+    stop_listener_event = threading.Event()
+
+    commands = build_timer_command_handlers(
+        timer,
+        exit_flag=exit_flag,
+        suspend_display=suspend_display,
+        in_audio_menu=in_audio_menu,
+    )
 
     def keyboard_listener() -> None:
         while (
