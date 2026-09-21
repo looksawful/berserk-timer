@@ -16,6 +16,9 @@ class KeyboardInputAdapter:
         self._preserve_printable_after_escape = preserve_printable_after_escape
         self._pending_key: str | None = None
 
+    def reset(self) -> None:
+        self._pending_key = None
+
     def poll_key(self) -> str | None:
         if self._pending_key is not None:
             key = self._pending_key
