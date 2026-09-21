@@ -8,9 +8,12 @@ class KeyboardInputAdapter:
         self,
         available: Callable[[], bool],
         read: Callable[[], str],
+        *,
+        preserve_printable_after_escape: bool = False,
     ) -> None:
         self._available = available
         self._read = read
+        self._preserve_printable_after_escape = preserve_printable_after_escape
         self._pending_key: str | None = None
 
     def poll_key(self) -> str | None:
@@ -47,7 +50,7 @@ class KeyboardInputAdapter:
                             self._read()
                         except (UnicodeDecodeError, OSError):
                             break
-                elif suffix:
+                elif suffix and self._preserve_printable_after_escape:
                     self._pending_key = suffix
             return None
 
@@ -75,7 +78,11 @@ def create_platform_keyboard_input() -> KeyboardInputAdapter:
         def read() -> str:
             return msvcrt.getch().decode("utf-8", errors="ignore")
 
-        return KeyboardInputAdapter(available, read)
+        return KeyboardInputAdapter(
+            available,
+            read,
+            preserve_printable_after_escape=True,
+        )
 
     import termios
     import tty
