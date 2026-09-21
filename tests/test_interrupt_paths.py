@@ -156,7 +156,7 @@ def test_witness_skip_confirmation_interrupt_skips_and_stops_alert(monkeypatch) 
 
     stop_repeating_alert = threading.Event()
     monkeypatch.setattr("builtins.input", interrupted_input)
-    monkeypatch.setattr(cli, "kbhit", lambda: False)
+    monkeypatch.setattr(cli.keyboard_input, "poll_key", lambda: None)
     monkeypatch.setattr(cli, "stop_sound", lambda: None)
 
     response, timer_end_time = cli.cli_witness_form(
