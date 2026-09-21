@@ -79,6 +79,21 @@ def test_poll_key_discards_alt_prefixed_printable_key_by_default() -> None:
     assert queue == []
 
 
+def test_reset_discards_buffered_printable_key() -> None:
+    queue = ["\x1b", "x"]
+    adapter = KeyboardInputAdapter(
+        lambda: bool(queue),
+        lambda: queue.pop(0),
+        preserve_printable_after_escape=True,
+    )
+
+    assert adapter.poll_key() is None
+    adapter.reset()
+
+    assert adapter.poll_key() is None
+    assert queue == []
+
+
 def test_poll_key_drains_windows_extended_key_suffix() -> None:
     adapter, queue = _adapter(["\xe0", "K"])
 
