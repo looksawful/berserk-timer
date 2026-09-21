@@ -27,18 +27,9 @@ def test_windows_keyboard_listener_dispatches_quit_handler(monkeypatch) -> None:
             return None
 
     timer = FakeTimer()
-    key_available = True
+    keys = iter(["q", None])
 
-    def fake_kbhit() -> bool:
-        return key_available
-
-    def fake_getch() -> str:
-        nonlocal key_available
-        key_available = False
-        return "q"
-
-    monkeypatch.setattr(cli, "kbhit", fake_kbhit)
-    monkeypatch.setattr(cli, "getch", fake_getch)
+    monkeypatch.setattr(cli.keyboard_input, "poll_key", lambda: next(keys, None))
     monkeypatch.setattr(cli, "prompt_input", lambda *_args, **_kwargs: "y")
     monkeypatch.setattr(cli, "redraw_command_hints", lambda: None)
     monkeypatch.setattr(cli, "render_ascii_screen", lambda *_args, **_kwargs: None)

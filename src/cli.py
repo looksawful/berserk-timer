@@ -1,6 +1,4 @@
-import select
 import shutil
-import sys
 import threading
 import time
 from typing import Callable, Dict, Optional, Tuple, TYPE_CHECKING
@@ -18,6 +16,7 @@ from .audio import (
 from .commands import dispatch_command
 from .constants import MAX_TIMER_SECONDS
 from .input_utils import read_input
+from .keyboard_input import create_platform_keyboard_input
 from .logger import delete_today_log, view_today_log
 from .screen_manager import get_screen_manager
 from .timer import TimerDurationError, validate_duration_seconds
@@ -28,6 +27,7 @@ if TYPE_CHECKING:
     from .timer import Timer
 
 console = Console()
+keyboard_input = create_platform_keyboard_input()
 
 MAIN_LOOP_INTERVAL = 0.5
 KEY_POLL_INTERVAL = 0.1
@@ -100,37 +100,6 @@ def show_volume_bar(volume: int, is_silent: bool = False) -> str:
         color = "red"
 
     return f"[{color}][{filled}{empty}] {volume}/{MAX_VOLUME}[/{color}]"
-
-
-if sys.platform.startswith("win"):
-    import msvcrt
-
-    def kbhit() -> bool:
-        return msvcrt.kbhit()
-
-    def getch() -> str:
-        try:
-            return msvcrt.getch().decode("utf-8", errors="ignore")
-        except (UnicodeDecodeError, OSError):
-            return ""
-
-else:
-    import termios
-    import tty
-
-    def kbhit() -> bool:
-        dr, _, _ = select.select([sys.stdin], [], [], 0)
-        return bool(dr)
-
-    def getch() -> str:
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(fd)
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
 
 
 def build_timer_command_handlers(
@@ -493,46 +462,22 @@ def run_cli_timer(timer: "Timer") -> bool:
     )
 
     def keyboard_listener() -> None:
-        while (
-            timer.is_running()
-            and not exit_flag.is_set()
-            and not stop_listener_event.is_set()
-        ):
-            if in_audio_menu.is_set():
-                time.sleep(KEY_POLL_INTERVAL)
-                continue
-            if kbhit():
-                try:
-                    key = getch()
-                except (UnicodeDecodeError, OSError):
+        try:
+            while (
+                timer.is_running()
+                and not exit_flag.is_set()
+                and not stop_listener_event.is_set()
+            ):
+                if in_audio_menu.is_set():
+                    time.sleep(KEY_POLL_INTERVAL)
                     continue
-
-                if not key:
-                    continue
-
-                if ord(key[0]) == 27:
-                    while kbhit():
-                        try:
-                            getch()
-                        except (UnicodeDecodeError, OSError):
-                            break
-                    continue
-
-                if ord(key[0]) == 224:
-                    if kbhit():
-                        try:
-                            getch()
-                        except (UnicodeDecodeError, OSError):
-                            pass
-                    continue
-
-                if ord(key[0]) < 32:
-                    continue
-
-                if dispatch_command(key, commands):
+                key = keyboard_input.poll_key()
+                if key is not None and dispatch_command(key, commands):
                     if key.lower() == "q" and exit_flag.is_set():
                         break
-            time.sleep(KEY_POLL_INTERVAL)
+                time.sleep(KEY_POLL_INTERVAL)
+        finally:
+            keyboard_input.reset()
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
     listener.start()
@@ -584,20 +529,19 @@ def cli_witness_form(
     stop_alert_flag = threading.Event()
 
     def check_for_k_key() -> None:
-        while not stop_alert_flag.is_set():
-            if kbhit():
-                try:
-                    key = getch()
-                    if key and key[0].lower() == "k":
-                        console.print("\n[yellow]Sound stopped (pressed 'k')[/yellow]")
-                        stop_sound()
-                        if stop_repeating_alert:
-                            stop_repeating_alert.set()
-                        stop_alert_flag.set()
-                        return
-                except (UnicodeDecodeError, OSError):
-                    pass
-            time.sleep(KEY_POLL_INTERVAL)
+        try:
+            while not stop_alert_flag.is_set():
+                key = keyboard_input.poll_key()
+                if key is not None and key[0].lower() == "k":
+                    console.print("\n[yellow]Sound stopped (pressed 'k')[/yellow]")
+                    stop_sound()
+                    if stop_repeating_alert:
+                        stop_repeating_alert.set()
+                    stop_alert_flag.set()
+                    return
+                time.sleep(KEY_POLL_INTERVAL)
+        finally:
+            keyboard_input.reset()
 
     k_listener = threading.Thread(target=check_for_k_key, daemon=True)
     k_listener.start()
