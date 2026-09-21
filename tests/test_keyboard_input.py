@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 import pytest
 
 from src.keyboard_input import KeyboardInputAdapter
