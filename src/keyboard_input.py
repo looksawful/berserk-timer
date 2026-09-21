@@ -47,8 +47,10 @@ class KeyboardInputAdapter:
                 if suffix in ("[", "O"):
                     while self._available():
                         try:
-                            self._read()
+                            sequence_key = self._read()
                         except (UnicodeDecodeError, OSError):
+                            break
+                        if sequence_key and 0x40 <= ord(sequence_key[0]) <= 0x7E:
                             break
                 elif suffix and self._preserve_printable_after_escape:
                     self._pending_key = suffix
