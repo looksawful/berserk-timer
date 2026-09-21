@@ -50,6 +50,14 @@ def test_poll_key_drains_escape_sequence() -> None:
     assert queue == []
 
 
+def test_poll_key_preserves_printable_key_queued_after_escape() -> None:
+    adapter, queue = _adapter(["\x1b", "k"])
+
+    assert adapter.poll_key() is None
+    assert adapter.poll_key() == "k"
+    assert queue == []
+
+
 def test_poll_key_drains_windows_extended_key_suffix() -> None:
     adapter, queue = _adapter(["\xe0", "K"])
 
