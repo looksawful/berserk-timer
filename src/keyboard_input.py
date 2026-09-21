@@ -11,27 +11,44 @@ class KeyboardInputAdapter:
     ) -> None:
         self._available = available
         self._read = read
+        self._pending_key: str | None = None
 
     def poll_key(self) -> str | None:
-        if not self._available():
-            return None
+        if self._pending_key is not None:
+            key = self._pending_key
+            self._pending_key = None
+        else:
+            if not self._available():
+                return None
+
+            try:
+                key = self._read()
+            except (UnicodeDecodeError, OSError):
+                return None
 
         try:
-            key = self._read()
-        except (UnicodeDecodeError, OSError):
+            code = ord(key[0]) if key else -1
+        except (IndexError, TypeError):
             return None
 
-        if not key:
+        if code < 0:
             return None
-
-        code = ord(key[0])
 
         if code == 27:
-            while self._available():
+            if self._available():
                 try:
-                    self._read()
+                    suffix = self._read()
                 except (UnicodeDecodeError, OSError):
-                    break
+                    return None
+
+                if suffix in ("[", "O"):
+                    while self._available():
+                        try:
+                            self._read()
+                        except (UnicodeDecodeError, OSError):
+                            break
+                elif suffix:
+                    self._pending_key = suffix
             return None
 
         if code == 224:
