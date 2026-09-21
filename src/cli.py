@@ -462,19 +462,22 @@ def run_cli_timer(timer: "Timer") -> bool:
     )
 
     def keyboard_listener() -> None:
-        while (
-            timer.is_running()
-            and not exit_flag.is_set()
-            and not stop_listener_event.is_set()
-        ):
-            if in_audio_menu.is_set():
+        try:
+            while (
+                timer.is_running()
+                and not exit_flag.is_set()
+                and not stop_listener_event.is_set()
+            ):
+                if in_audio_menu.is_set():
+                    time.sleep(KEY_POLL_INTERVAL)
+                    continue
+                key = keyboard_input.poll_key()
+                if key is not None and dispatch_command(key, commands):
+                    if key.lower() == "q" and exit_flag.is_set():
+                        break
                 time.sleep(KEY_POLL_INTERVAL)
-                continue
-            key = keyboard_input.poll_key()
-            if key is not None and dispatch_command(key, commands):
-                if key.lower() == "q" and exit_flag.is_set():
-                    break
-            time.sleep(KEY_POLL_INTERVAL)
+        finally:
+            keyboard_input.reset()
 
     listener = threading.Thread(target=keyboard_listener, daemon=True)
     listener.start()
@@ -526,16 +529,19 @@ def cli_witness_form(
     stop_alert_flag = threading.Event()
 
     def check_for_k_key() -> None:
-        while not stop_alert_flag.is_set():
-            key = keyboard_input.poll_key()
-            if key is not None and key[0].lower() == "k":
-                console.print("\n[yellow]Sound stopped (pressed 'k')[/yellow]")
-                stop_sound()
-                if stop_repeating_alert:
-                    stop_repeating_alert.set()
-                stop_alert_flag.set()
-                return
-            time.sleep(KEY_POLL_INTERVAL)
+        try:
+            while not stop_alert_flag.is_set():
+                key = keyboard_input.poll_key()
+                if key is not None and key[0].lower() == "k":
+                    console.print("\n[yellow]Sound stopped (pressed 'k')[/yellow]")
+                    stop_sound()
+                    if stop_repeating_alert:
+                        stop_repeating_alert.set()
+                    stop_alert_flag.set()
+                    return
+                time.sleep(KEY_POLL_INTERVAL)
+        finally:
+            keyboard_input.reset()
 
     k_listener = threading.Thread(target=check_for_k_key, daemon=True)
     k_listener.start()
