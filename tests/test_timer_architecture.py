@@ -21,6 +21,8 @@ def test_timer_domain_does_not_import_persistence_or_logging_adapters():
         for alias in node.names
     }
 
+    assert "logging" not in imported_modules
+    assert "logging" not in imported_names
     assert "logger" not in imported_modules
     assert "src.logger" not in imported_modules
     assert "src.logger" not in imported_names
