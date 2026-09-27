@@ -83,3 +83,17 @@ For a non-trivial change, review in this order:
 4. Linux CI baseline;
 5. Windows/manual evidence when platform behavior is involved;
 6. docs and changelog sync.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues are used for this repository. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage vocabulary is configured in `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout. See `docs/agents/domain.md`.
