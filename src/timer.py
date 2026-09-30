@@ -1,12 +1,9 @@
-import logging
 import math
 import threading
 import time
 from typing import Optional
 
 from .constants import MAX_TIMER_SECONDS
-from .logger import log_event
-
 MIN_TIMER_SECONDS = 1
 
 
@@ -146,12 +143,6 @@ class Timer:
 
     def get_goal(self) -> Optional[str]:
         return self.goal
-
-    def log_data(self, message: str) -> None:
-        if self.log_without_timer:
-            log_event(message)
-        else:
-            logging.error("Timer must be running to log data.")
 
     def toggle_silent(self) -> None:
         if not self._silent:
