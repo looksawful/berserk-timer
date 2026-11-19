@@ -19,7 +19,8 @@ def on_timer_end(
     custom_phrase: str | None,
     goal: str | None = None,
 ) -> tuple[float, float]:
-    log_timer_end()
+    if witness_mode:
+        log_timer_end()
     timer_end_time = time.time()
     timer_end_perf = time.perf_counter()
 
@@ -77,7 +78,7 @@ def on_timer_end(
     messages = config.get("messages", [])
     if messages:
         message = custom_phrase or random.choice(messages)
-        logging.info(f"Advice: {message}")
+        logging.info("Advice displayed.")
         print(f"\n💡 {message}")
 
     return timer_end_time, timer_end_perf
@@ -131,11 +132,11 @@ def run_timer_loop(
             unit = "seconds" if args.seconds else "minutes"
 
         log_event(
-            "Timer started for "
-            f"{display_duration} {unit}. Witness mode: {witness_mode}. "
-            f"Custom message: {custom_phrase}. Goal: {goal}"
+            f"Timer started for {display_duration} {unit}. "
+            f"Witness mode: {witness_mode}."
         )
-        log_timer_start(duration / 60, goal)
+        if witness_mode:
+            log_timer_start(duration / 60, goal)
 
         sound_file = args.sound or config.get("sound_file", "alert1.wav")
         volume = config.get("volume", 5)

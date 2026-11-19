@@ -17,7 +17,7 @@
         "xl": 25,
         "test": 1
     },
-    "witness_mode": true,
+    "witness_mode": false,
     "safe_word": "skip",
     "sound_file": "alert1.wav",
     "volume": 5
