@@ -93,7 +93,8 @@ The maximum duration is defined centrally by the application and validated both 
 -l                    Large preset
 -X                    Extra-large preset
 -t                    Test preset
--w                    Enable witness mode
+-w, --witness         Enable witness mode
+--no-witness          Disable witness for this run (overrides saved config)
 -c MESSAGE            Custom advice message
 --sound FILE          Select an alert WAV file
 --seconds             Interpret positional duration as seconds
@@ -122,7 +123,9 @@ Command routing is separated from raw keyboard polling so the command surface ca
 
 ## Witness logging
 
-When witness mode is enabled, the timer asks what was accomplished after the session. The default safe word is `skip`.
+Witness is **off by default on fresh installs**. Use `-w` or `--witness` to ask what was accomplished after the timer; the default safe word is `skip`. Existing user configurations that explicitly enabled Witness remain enabled. Use `--no-witness` to override that preference for a single run.
+
+Without Witness, the application does not create or append to witness logs. The general event log records timer duration and mode, not goal text or a user-supplied advice message. Disabling Witness does **not** delete existing log files.
 
 Logs are user-scoped instead of being written into whichever directory happened to launch `berserk`:
 
@@ -166,7 +169,7 @@ Current default shape:
     "xl": 25,
     "test": 1
   },
-  "witness_mode": true,
+  "witness_mode": false,
   "safe_word": "skip",
   "sound_file": "alert1.wav",
   "volume": 5

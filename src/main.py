@@ -47,10 +47,12 @@ def show_help() -> None:
     print("  -X, --xl               Extra Large preset (25 minutes)")
     print("  -t, --test             Test preset (1 minute)")
     print("  -w, --witness          Enable witness mode (activity logging)")
+    print("  --no-witness          Disable witness mode for this run")
     print("  -c MESSAGE             Custom advice message")
     print("  --sound FILE           Sound file to play (alert1-5.wav)")
     print("  --seconds              Interpret duration as seconds instead of minutes")
-    print("  --mute                 Launch in silent mode\n")
+    print("  --mute                 Launch in silent mode")
+    print("  Witness is off by default for new profiles; saved preferences remain.\n")
     print("LIMITS:")
     print(
         f"  Maximum duration: {MAX_TIMER_SECONDS // 3600} hours "
@@ -87,7 +89,13 @@ def parse_arguments() -> argparse.Namespace:
     group.add_argument("-l", action="store_true", help="Use preset l (20 minutes)")
     group.add_argument("-X", action="store_true", help="Use preset xl (25 minutes)")
     group.add_argument("-t", action="store_true", help="Use test preset (1 minute)")
-    parser.add_argument("-w", action="store_true", help="Enable witness mode")
+    witness_group = parser.add_mutually_exclusive_group()
+    witness_group.add_argument(
+        "-w", "--witness", dest="w", action="store_true", help="Enable witness mode"
+    )
+    witness_group.add_argument(
+        "--no-witness", action="store_true", help="Disable witness mode for this run"
+    )
     parser.add_argument("-c", type=str, help="Custom advice message")
     parser.add_argument(
         "--sound", type=str, help="Sound file to play (e.g., alert1.wav, alert2.wav)"
@@ -226,7 +234,11 @@ def main() -> None:
 
     # Timer volume owns CLI mute; keep the audio backend's global block clear.
     set_mute(False)
-    witness_mode = args.w or config.get("witness_mode", False)
+    witness_mode = config.get("witness_mode", False)
+    if args.w:
+        witness_mode = True
+    elif args.no_witness:
+        witness_mode = False
     init_screen(use_alternate_buffer=True, debug_mode=args.debug)
     atexit.register(cleanup_screen)
     run_timer_loop(args, config, duration, witness_mode, args.c, goal, interactive_mode)

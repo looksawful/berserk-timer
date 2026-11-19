@@ -21,7 +21,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "Read a few pages",
     ],
     "presets": {"xs": 5, "s": 10, "m": 15, "l": 20, "xl": 25, "test": 1},
-    "witness_mode": True,
+    "witness_mode": False,
     "safe_word": "skip",
     "sound_file": "alert1.wav",
     "volume": 5,
