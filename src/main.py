@@ -224,7 +224,8 @@ def main() -> None:
     )
     goal = goal_value.strip() or None if goal_value is not None else None
 
-    set_mute(args.mute)
+    # Timer volume owns CLI mute; keep the audio backend's global block clear.
+    set_mute(False)
     witness_mode = args.w or config.get("witness_mode", False)
     init_screen(use_alternate_buffer=True, debug_mode=args.debug)
     atexit.register(cleanup_screen)
